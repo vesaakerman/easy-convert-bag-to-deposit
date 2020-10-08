@@ -1,2 +1,4 @@
-# easy-vault-export-ip
-Export bags from the Vault as information packages
+easy-vault-export-ip
+===========
+
+For documentation see: https://dans-knaw.github.io/easy-vault-export-ip
