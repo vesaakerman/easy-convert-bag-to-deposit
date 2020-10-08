@@ -19,6 +19,7 @@ import java.io.{ FileNotFoundException, IOException }
 
 import better.files.File
 import better.files.File.CopyOptions
+import nl.knaw.dans.bag.v0.DansV0Bag
 import nl.knaw.dans.easy.bag2deposit.Command.FeedBackMessage
 import nl.knaw.dans.easy.bag2deposit.IdType.IdType
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
@@ -40,11 +41,16 @@ class EasyConvertBagToDespositApp(configuration: Configuration) extends DebugEnh
     logger.debug(s"creating application.properties for $bagParentDir")
     for {
       metadataDir <- getMetadataDir(bagParentDir)
-      bagInfo <- BagInfo(metadataDir / ".." / "bag-info.txt")
+      bagDir = metadataDir.parent
+      bag <- BagFacade.getBag(bagDir)
+      _ = bag.getMetadata.remove(DansV0Bag.EASY_USER_ACCOUNT_KEY)
+      bagInfo <- BagInfo(bagDir / "bag-info.txt")// TODO detour: use bag.getMetadata
       _ = logger.debug(s"$bagInfo")
       ddm = XML.loadFile((metadataDir / "dataset.xml").toJava)
       props <- factory.create(bagInfo, ddm, idType)
       _ = props.save((bagParentDir / "deposit.properties").toJava)
+      _ <- BagFacade.updateMetadata(bag)
+      _ <- BagFacade.updateManifest(bag)
       _ = maybeOutputDir.foreach(move(bagParentDir))
       _ = logger.info(s"OK $bagParentDir")
     } yield true
@@ -53,7 +59,7 @@ class EasyConvertBagToDespositApp(configuration: Configuration) extends DebugEnh
       logger.error(s"$bagParentDir failed: ${ e.getMessage }")
       Success(false)
     case e: FileNotFoundException =>
-      logger.error(s"$bagParentDir failed: ${e.getMessage}")
+      logger.error(s"$bagParentDir failed: ${ e.getMessage }")
       Success(false)
   }
 
