@@ -31,27 +31,29 @@ import scala.xml.XML
 class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with BagIndexSupport {
 
   "create" should "not call the bag-index" in {
-    val bag = File("src/test/resources/bags/01") / "04e638eb-3af1-44fb-985d-36af12fccb2d" / "bag-revision-1"
-    DepositPropertiesFactory(mockedConfig(null))
+    val uuid = "04e638eb-3af1-44fb-985d-36af12fccb2d"
+    val bag = File("src/test/resources/bags/01") / uuid / "bag-revision-1"
+    DepositPropertiesFactory(mockedConfig(null), IdType.DOI, BagSource.VAULT)
       .create(
         BagInfo(bag / "bag-info.txt").unsafeGetOrThrow,
         ddm = XML.loadFile((bag / "metadata" / "dataset.xml").toJava),
-        IdType.DOI,
       ).map(serialize) shouldBe Success(
-      """state.label = SUBMITTED
+      s"""state.label = SUBMITTED
         |state.description = This deposit was extracted from the vault and is ready for processing
-        |deposit.origin = vault
+        |deposit.origin = VAULT
         |creation.timestamp = 2016-06-07
         |depositor.userId = user001
-        |bag-store.bag-id = 04e638eb-3af1-44fb-985d-36af12fccb2d
+        |bag-store.bag-id = $uuid
         |bag-store.bag-name = bag-revision-1
         |identifier.doi = 10.5072/dans-2xg-umq8
         |identifier.urn = urn:nbn:nl:ui:13-00-3haq
         |identifier.fedora = easy-dataset:162288
-        |dataverse.bag-id = urn:uuid:04e638eb-3af1-44fb-985d-36af12fccb2d
-        |dataverse.sword-token = urn:uuid:04e638eb-3af1-44fb-985d-36af12fccb2d
-        |dataverse.nbn = urn:uuid:urn:nbn:nl:ui:13-00-3haq
-        |dataverse.identifier = 10.5072/dans-2xg-umq8
+        |dataverse.bag-id = urn:uuid:$uuid
+        |dataverse.sword-token = $uuid
+        |dataverse.nbn = urn:nbn:nl:ui:13-00-3haq
+        |dataverse.id-protocol = doi
+        |dataverse.identifier = dans-2xg-umq8
+        |dataverse.id-authority = 10.80270
         |""".stripMargin
     )
   }
@@ -84,12 +86,12 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
                 </ddm:dcmiMetadata>
               </ddm:DDM>
 
-    DepositPropertiesFactory(mockedConfig(mockBagIndexRespondsWith(bagIndexBody, 200)))
-      .create(bagInfo, ddm, IdType.URN)
+    DepositPropertiesFactory(mockedConfig(mockBagIndexRespondsWith(bagIndexBody, 200)), IdType.URN, BagSource.VAULT)
+      .create(bagInfo, ddm)
       .map(serialize) shouldBe Success(
       s"""state.label = SUBMITTED
          |state.description = This deposit was extracted from the vault and is ready for processing
-         |deposit.origin = vault
+         |deposit.origin = VAULT
          |creation.timestamp = 2017-01-16T14:35:00.888+01:00
          |depositor.userId = user001
          |bag-store.bag-id = $bagUUID
@@ -98,9 +100,11 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
          |identifier.urn = urn:nbn:nl:ui:13-00-3haq
          |identifier.fedora = easy-dataset:162288
          |dataverse.bag-id = urn:uuid:$bagUUID
-         |dataverse.sword-token = urn:uuid:$baseUUID
-         |dataverse.nbn = urn:uuid:urn:nbn:nl:ui:13-z4-f8cm
-         |dataverse.identifier = urn:nbn:nl:ui:13-00-3haq
+         |dataverse.sword-token = $baseUUID
+         |dataverse.nbn = urn:nbn:nl:ui:13-z4-f8cm
+         |dataverse.id-protocol = urn
+         |dataverse.id-identifier = urn:nbn:nl:ui:13-00-3haq
+         |dataverse.id-authority = nbn:nl:ui:13
          |""".stripMargin
     )
   }
@@ -121,12 +125,12 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
                 </ddm:dcmiMetadata>
               </ddm:DDM>
 
-    DepositPropertiesFactory(mockedConfig(null))
-      .create(bagInfo, ddm, IdType.URN)
+    DepositPropertiesFactory(mockedConfig(null), IdType.URN, BagSource.VAULT)
+      .create(bagInfo, ddm)
       .map(serialize) shouldBe Success(
       s"""state.label = SUBMITTED
          |state.description = This deposit was extracted from the vault and is ready for processing
-         |deposit.origin = vault
+         |deposit.origin = VAULT
          |creation.timestamp = 2017-01-16T14:35:00.888+01:00
          |depositor.userId = user001
          |bag-store.bag-id = $bagUUID
@@ -135,10 +139,12 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
          |identifier.urn = urn:nbn:nl:ui:13-00-3haq
          |identifier.fedora = easy-dataset:162288
          |dataverse.bag-id = urn:uuid:$bagUUID
-         |dataverse.sword-token = urn:uuid:$bagUUID
-         |dataverse.nbn = urn:uuid:urn:nbn:nl:ui:13-00-3haq
-         |dataverse.other-id = 10.12345/foo-bar
-         |dataverse.identifier = urn:nbn:nl:ui:13-00-3haq
+         |dataverse.sword-token = $bagUUID
+         |dataverse.nbn = urn:nbn:nl:ui:13-00-3haq
+         |dataverse.other-id = https://doi.org/10.12345/foo-bar
+         |dataverse.id-protocol = urn
+         |dataverse.id-identifier = urn:nbn:nl:ui:13-00-3haq
+         |dataverse.id-authority = nbn:nl:ui:13
          |""".stripMargin
     )
   }

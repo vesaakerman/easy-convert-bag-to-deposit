@@ -13,18 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.easy.bag2deposit.Fixture
+package nl.knaw.dans.easy.bag2deposit
 
-import nl.knaw.dans.easy.bag2deposit.{ BagIndex, Configuration }
-import org.scalamock.scalatest.MockFactory
+object BagSource extends Enumeration {
+  type BagSource = Value
 
-trait AppConfigSupport extends MockFactory {
-  def mockedConfig(bagIndex: BagIndex): Configuration = {
-    new Configuration(
-      version = "testVersion",
-      dansDoiPrefixes = Seq("10.17026/", "10.5072/"),
-      dataverseIdAutority = "10.80270",
-      bagIndex = bagIndex,
-    )
-  }
+  val VAULT: BagSource = Value("VAULT")
+  val FEDORA: BagSource = Value("VAULT")
 }
