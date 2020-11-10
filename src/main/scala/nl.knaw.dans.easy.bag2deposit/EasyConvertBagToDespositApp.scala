@@ -39,10 +39,10 @@ class EasyConvertBagToDespositApp(configuration: Configuration) extends DebugEnh
       .getOrElse(Success(s"No fatal errors")) // TODO show number of false/true values
   }
 
-  private def addProps(factory: DepositPropertiesFactory, maybeOutputDir: Option[File])
+  private def addProps(depositPropertiesFactory: DepositPropertiesFactory, maybeOutputDir: Option[File])
                       (bagParentDir: File): Try[Boolean] = {
     logger.debug(s"creating application.properties for $bagParentDir")
-    val requireBaseUrnWithVersionOf = factory.bagSource == VAULT // TODO less sneaky
+    val requireBaseUrnWithVersionOf = depositPropertiesFactory.bagSource == VAULT // TODO less sneaky
     val bagInfoKeysToRemove = Seq(
       DansV0Bag.EASY_USER_ACCOUNT_KEY,
       BagInfo.baseUrnKey,
@@ -53,8 +53,12 @@ class EasyConvertBagToDespositApp(configuration: Configuration) extends DebugEnh
       mutableBagMetadata = bag.getMetadata
       bagInfo <- BagInfo(bagDir, mutableBagMetadata, requireBaseUrnWithVersionOf)
       _ = logger.debug(s"$bagInfo")
-      ddm = XML.loadFile((bagDir / "metadata" / "dataset.xml").toJava)
-      props <- factory.create(bagInfo, ddm)
+      ddmFile = bagDir / "metadata" / "dataset.xml"
+      ddmIn <- loadXml(ddmFile)
+      ddmOut = configuration.ddmRewriteRule.transform(ddmIn).headOption
+        .getOrElse(throw InvalidBagException("DDM transformation returned empty sequence"))
+      _ = ddmFile.writeText(ddmOut.serialize)
+      props <- depositPropertiesFactory.create(bagInfo, ddmOut)
       _ = props.save((bagParentDir / "deposit.properties").toJava)
       _ = bagInfoKeysToRemove.foreach(mutableBagMetadata.remove)
       _ <- BagFacade.updateMetadata(bag)

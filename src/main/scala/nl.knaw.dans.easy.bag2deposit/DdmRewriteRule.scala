@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.easy.bag2deposit.Fixture
+package nl.knaw.dans.easy.bag2deposit
 
-import nl.knaw.dans.easy.bag2deposit.{ BagIndex, Configuration, DdmRewriteRule }
-import org.scalamock.scalatest.MockFactory
+import scala.xml.Node
+import scala.xml.transform.RewriteRule
 
-trait AppConfigSupport extends MockFactory {
-  def mockedConfig(bagIndex: BagIndex): Configuration = {
-    new Configuration(
-      version = "testVersion",
-      dansDoiPrefixes = Seq("10.17026/", "10.5072/"),
-      dataverseIdAutority = "10.80270",
-      bagIndex = bagIndex,
-      ddmRewriteRule = DdmRewriteRule(Map.empty, Map.empty)
-    )
+case class DdmRewriteRule(temporal: Map[String, String], complex: Map[String, String]) extends RewriteRule {
+
+  override def transform(n: Node): Seq[Node] = n match {
+    case <datasetState>{_}</datasetState> => <datasetState>{"deleted"}</datasetState>
+    case <previousState>{_}</previousState> => <previousState>{"formerState"}</previousState>
+    case <lastStateChange>{_}</lastStateChange> => <lastStateChange>{"changeDateString"}</lastStateChange>
+    case _ => super.transform(n)
   }
 }
+

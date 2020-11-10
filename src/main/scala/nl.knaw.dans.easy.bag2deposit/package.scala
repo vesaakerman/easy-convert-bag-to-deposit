@@ -15,10 +15,14 @@
  */
 package nl.knaw.dans.easy
 
+import java.io.FileNotFoundException
+
+import better.files.File
 import org.joda.time.format.{ DateTimeFormatter, ISODateTimeFormat }
 import org.joda.time.{ DateTime, DateTimeZone }
 
-import scala.xml.{ Node, PrettyPrinter, Utility }
+import scala.util.{ Failure, Try }
+import scala.xml.{ Elem, Node, PrettyPrinter, SAXParseException, Utility, XML }
 
 package object bag2deposit {
 
@@ -38,13 +42,20 @@ package object bag2deposit {
         .contains(t)
     }
   }
-  private val logPrinter = new PrettyPrinter(-1, 0)
+
   val printer = new PrettyPrinter(160, 2)
+
+  def loadXml(file: File): Try[Elem] = Try(XML.loadFile(file.toJava))
+    .recoverWith {
+      case t: FileNotFoundException => Failure(InvalidBagException(s"could not find: $file"))
+      case t: SAXParseException => Failure(InvalidBagException(s"could not load: $file - ${ t.getMessage }"))
+    }
 
   implicit class XmlExtensions(val elem: Node) extends AnyVal {
 
-    def toOneLiner: String = {
-      logPrinter.format(Utility.trim(elem)).trim
+    def serialize: String = {
+      """<?xml version="1.0" encoding="UTF-8"?>
+        |""".stripMargin + printer.format(elem)
     }
   }
 }

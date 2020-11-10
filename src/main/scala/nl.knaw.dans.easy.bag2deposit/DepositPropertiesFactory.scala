@@ -21,10 +21,10 @@ import nl.knaw.dans.lib.error.TryExtensions
 import org.apache.commons.configuration.PropertiesConfiguration
 
 import scala.util.Try
-import scala.xml.{ Elem, NodeSeq }
+import scala.xml.{ Node, NodeSeq }
 
 case class DepositPropertiesFactory(configuration: Configuration, idType: IdType, bagSource: BagSource) {
-  def create(bagInfo: BagInfo, ddm: Elem): Try[PropertiesConfiguration] = Try {
+  def create(bagInfo: BagInfo, ddm: Node): Try[PropertiesConfiguration] = Try {
     val ddmIds: NodeSeq = ddm \ "dcmiMetadata" \ "identifier"
 
     def getIdType(idType: String) = ddmIds
