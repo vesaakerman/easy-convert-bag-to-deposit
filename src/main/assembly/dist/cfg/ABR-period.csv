@@ -1,54 +1,56 @@
-PALEO,PALEO,8d762bf7-bda3-4c07-b77f-5df51301ad3f
-PALEOV,PALEOV,91330b66-c511-4800-be87-4e262b367e97
-PALEOM,PALEOM,6dbdb234-5c13-44c6-b549-87ca9038edf3
-PALEOL,PALEOL,a29e5aef-b5fc-4c3f-bfbd-85134fb1f525
-PALEOLA,PALEOLA,141b0f09-eaba-48a2-8963-bad3ac5146e3
-PALEOB,PALEOLB,934393db-3667-44e6-887b-9a1d2d794d16
-MESO,MESO,5142431c-0520-489b-afef-60940d9f7c50
-MESOV,MESOV,6009967f-59c9-4e25-8268-4711c3c07235
-MESOM,MESOM,94bffc3e-84e1-4511-8a12-ebfaaa9b9eda
-MESOL,MESOL,bb506c03-f2ee-4076-a8b5-3bce5fa5c795
-NEO,NEO,c6134150-77f2-481b-bba6-c482e59046e8
-NEOV,NEOV,b8863167-1809-4a9a-8cd6-cc8aaeafa7e6
-NEOVA,NEOVA,94f541a6-6ec9-47b1-927c-9b09cf448cd7
-NEOVB,NEOVB,4655bf21-5d2b-4267-a8ac-8f75c21bde8b
-NEOM,NEOM,f2309bfe-56df-4f2f-b390-49f78018abcd
-NEOMA,NEOMA,ab077a87-4056-4f69-a417-de8bbeb9765d
-NEOMB,NEOMB,77d4167b-9903-4abf-99ef-e28f92f618a7
-NEOL,NEOL,c699990c-73d3-4e47-926f-5c22adec98de
-NEOLA,NEOLA,547f2d1a-b9e4-4e61-b040-551eecfa56b1
-NEOLB,NEOLB,282e4b83-22c6-4df2-84d1-ef7d68bd3d5d
-BRONS,BRONS,8072a357-c9aa-4cd8-b8ba-c06a8e176431
-BRONSV,BRONSV,6264b6bd-899e-4c34-a88e-03a36e1d4008
-BRONSM,BRONSM,405d4012-5845-4837-8051-2a559679c30e
-BRONSMA,BRONSMA,efbd65be-d4bd-4a74-84a9-41f9b60e77e5
-BRONSMB,BRONSMB,bb71782d-72ed-4f57-9736-424747358be5
-BRONSL,BRONSL,98a715d8-cd51-4125-b1b3-4c8d489f85bf
-IJZ,IJZ,0e341d8a-d304-40fe-8dda-dd3845bb1f7f
-IJZV,IJZV,7955ec8c-463d-4fd1-bb83-eb8451c3bd28
-IJZM,IJZM,09a34060-105b-4e11-91a7-9d3484bc318d
-IJZL,IJZL,e07ff2d6-1da1-4ede-9b4b-175ba229a683
-ROM,ROM,5a2cef7f-1fc3-45a7-9271-cd634c748e49
-ROMV,ROMV,2afb3dea-241c-47a7-9f5b-1ce0163a114d
-ROMVA,ROMVA,d08febfe-53a5-4053-a332-c4372b2bfe12
-ROMVB,ROMVB,fcb22b7d-2857-43e9-9795-d78e712a69f1
-ROMM,ROMM,b4715d2d-db9b-4c5b-a842-a186e024645f
-ROMMA,ROMMA,5b253754-ddd0-4ae0-a5bb-555176bca858
-ROMMB,ROMMB,d5c6eaee-a772-4c62-95fe-6a793765b93a
-ROML,ROML,15eaccb6-0739-4571-b518-88e5c081f74c
-ROMLA,ROMLA,138bb89b-a0d1-4ab0-bf0b-4103ded264bd
-ROMLB,ROMLB,2c686437-b730-4304-a436-06c8916c3301
-XME,XME,4bf24a9f-1f7d-497e-96a4-d4a0f42d564b
-VME,MEV,ae70e517-2662-49ea-a1be-eca52b2d218e
-VMEA,VMEA,330e7fe0-a1f7-43de-b448-d477898f6648
-VMEB,MEVB,98ffaf6a-e761-4d69-8c1c-e0d75646f3ba
-VMEC,MEVC,286fb38b-a368-45aa-97f3-8151d5bbc7f6
-VMED,MEVD,533f6881-7c2d-49fc-bce6-71a839558c0f
-LME,MEL,ee2993b8-96d0-43cf-a350-a055476d2707
-LMEA,MELA,f9d59f22-0ed5-435d-bd8c-e8c3b84875d5
-LMEB,MELB,2c559d8a-4b5e-4a53-a556-b4e2e7d7dd9d
-NT,NT,rce.abrperiod.nieuwetijd
-NTA,NTV,482e37cc-61f5-4e21-a331-e342ffadeff6
-NTB,NTM,8c50361f-9c6b-4422-a2f5-4710ee1688ec
-NTC,NTL,ab1eb6b7-ecda-407a-a4ba-aaa3b6c66ec5
-XXX,XXX,3db8e14e-9ee5-4b5d-a5df-b706901468a2
+Bron oude ABR: (/easy-business/src/main/resources/easy-business/discipline/emd/choicelist/archaeology/dcterms/temporal.xml) TABEL 9: PERIODE Datering Nederlandse geschiedenis volgens het R.O.B. (http://home.zonnet.nl/postbus/datering.html),,Bron ABR+: export_AbrPeriodes_20150624T1442.xlsx,
+Code huidige oude ABR,ABR-Plus CODE PrefLabel (c01),Uri,PrefLabel (dut)
+BRONS,BRONS,8072a357-c9aa-4cd8-b8ba-c06a8e176431,Bronstijd
+BRONSL,BRONSL,98a715d8-cd51-4125-b1b3-4c8d489f85bf,Late Bronstijd
+BRONSM,BRONSM,405d4012-5845-4837-8051-2a559679c30e,Midden Bronstijd
+BRONSMA,BRONSMA,efbd65be-d4bd-4a74-84a9-41f9b60e77e5,Midden Bronstijd A
+BRONSMB,BRONSMB,bb71782d-72ed-4f57-9736-424747358be5,Midden Bronstijd B
+BRONSV,BRONSV,6264b6bd-899e-4c34-a88e-03a36e1d4008,Vroege Bronstijd
+IJZ,IJZ,0e341d8a-d304-40fe-8dda-dd3845bb1f7f,IJzertijd
+IJZL,IJZL,e07ff2d6-1da1-4ede-9b4b-175ba229a683,Late IJzertijd
+IJZM,IJZM,09a34060-105b-4e11-91a7-9d3484bc318d,Midden IJzertijd
+IJZV,IJZV,7955ec8c-463d-4fd1-bb83-eb8451c3bd28,Vroege IJzertijd
+LME,MEL,ee2993b8-96d0-43cf-a350-a055476d2707,Late Middeleeuwen
+LMEA,MELA,f9d59f22-0ed5-435d-bd8c-e8c3b84875d5,Late Middeleeuwen A
+LMEB,MELB,2c559d8a-4b5e-4a53-a556-b4e2e7d7dd9d,Late Middeleeuwen B
+MESO,MESO,5142431c-0520-489b-afef-60940d9f7c50,Mesolithicum
+MESOL,MESOL,bb506c03-f2ee-4076-a8b5-3bce5fa5c795,Laat Mesolithicum
+MESOM,MESOM,94bffc3e-84e1-4511-8a12-ebfaaa9b9eda,Midden Mesolithicum
+MESOV,MESOV,6009967f-59c9-4e25-8268-4711c3c07235,Vroeg Mesolithicum
+NEO,NEO,c6134150-77f2-481b-bba6-c482e59046e8,Neolithicum
+NEOL,NEOL,c699990c-73d3-4e47-926f-5c22adec98de,Laat Neolithicum
+NEOLA,NEOLA,547f2d1a-b9e4-4e61-b040-551eecfa56b1,Laat Neolithicum A
+NEOLB,NEOLB,282e4b83-22c6-4df2-84d1-ef7d68bd3d5d,Laat Neolithicum B
+NEOM,NEOM,f2309bfe-56df-4f2f-b390-49f78018abcd,Midden Neolithicum
+NEOMA,NEOMA,ab077a87-4056-4f69-a417-de8bbeb9765d,Midden Neolithicum A
+NEOMB,NEOMB,77d4167b-9903-4abf-99ef-e28f92f618a7,Midden Neolithicum B
+NEOV,NEOV,b8863167-1809-4a9a-8cd6-cc8aaeafa7e6,Vroeg Neolithicum
+NEOVA,NEOVA,94f541a6-6ec9-47b1-927c-9b09cf448cd7,Vroeg Neolithicum A
+NEOVB,NEOVB,4655bf21-5d2b-4267-a8ac-8f75c21bde8b,Vroeg Neolithicum B
+NT,NT,rce.abrperiod.nieuwetijd,Nieuwe Tijd
+NTA,NTV,482e37cc-61f5-4e21-a331-e342ffadeff6,Nieuwe Tijd Vroeg
+NTB,NTM,8c50361f-9c6b-4422-a2f5-4710ee1688ec,Nieuwe Tijd Midden
+NTC,NTL,ab1eb6b7-ecda-407a-a4ba-aaa3b6c66ec5,Nieuwe Tijd Laat
+PALEO,PALEO,8d762bf7-bda3-4c07-b77f-5df51301ad3f,Paleolithicum
+PALEOB,PALEOLB,934393db-3667-44e6-887b-9a1d2d794d16,Laat Paleolithicum B
+PALEOL,PALEOL,a29e5aef-b5fc-4c3f-bfbd-85134fb1f525,Laat Paleolithicum
+PALEOLA,PALEOLA,141b0f09-eaba-48a2-8963-bad3ac5146e3,Laat Paleolithicum A
+PALEOM,PALEOM,6dbdb234-5c13-44c6-b549-87ca9038edf3,Midden Paleolithicum
+PALEOV,PALEOV,91330b66-c511-4800-be87-4e262b367e97,Vroeg Paleolithicum
+ROM,ROM,5a2cef7f-1fc3-45a7-9271-cd634c748e49,Romeinse Tijd
+ROML,ROML,15eaccb6-0739-4571-b518-88e5c081f74c,Laat Romeinse Tijd
+ROMLA,ROMLA,138bb89b-a0d1-4ab0-bf0b-4103ded264bd,Laat Romeinse Tijd A
+ROMLB,ROMLB,2c686437-b730-4304-a436-06c8916c3301,Laat Romeinse Tijd B
+ROMM,ROMM,b4715d2d-db9b-4c5b-a842-a186e024645f,Midden Romeinse Tijd
+ROMMA,ROMMA,5b253754-ddd0-4ae0-a5bb-555176bca858,Midden Romeinse Tijd A
+ROMMB,ROMMB,d5c6eaee-a772-4c62-95fe-6a793765b93a,Midden Romeinse Tijd B
+ROMV,ROMV,2afb3dea-241c-47a7-9f5b-1ce0163a114d,Vroeg Romeinse Tijd
+ROMVA,ROMVA,d08febfe-53a5-4053-a332-c4372b2bfe12,Vroeg Romeinse Tijd A
+ROMVB,ROMVB,fcb22b7d-2857-43e9-9795-d78e712a69f1,Vroeg Romeinse Tijd B
+VME,MEV,ae70e517-2662-49ea-a1be-eca52b2d218e,Vroege Middeleeuwen
+VMEA,MEVA,330e7fe0-a1f7-43de-b448-d477898f6648,Vroege Middeleeuwen A
+VMEB,MEVB,98ffaf6a-e761-4d69-8c1c-e0d75646f3ba,Vroege Middeleeuwen B
+VMEC,MEVC,286fb38b-a368-45aa-97f3-8151d5bbc7f6,Vroege Middeleeuwen C
+VMED,MEVD,533f6881-7c2d-49fc-bce6-71a839558c0f,Vroege Middeleeuwen D
+XME,XME,4bf24a9f-1f7d-497e-96a4-d4a0f42d564b,Middeleeuwen
+XXX,XXX,3db8e14e-9ee5-4b5d-a5df-b706901468a2,Onbekend
