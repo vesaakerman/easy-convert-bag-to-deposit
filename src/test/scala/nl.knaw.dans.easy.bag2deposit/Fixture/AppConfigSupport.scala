@@ -15,17 +15,21 @@
  */
 package nl.knaw.dans.easy.bag2deposit.Fixture
 
-import nl.knaw.dans.easy.bag2deposit.{ BagIndex, Configuration, DdmRewriteRule }
+import better.files.File
+import nl.knaw.dans.easy.bag2deposit.{ AbrRewriteRule, BagIndex, Configuration }
 import org.scalamock.scalatest.MockFactory
+
+import scala.xml.transform.RuleTransformer
 
 trait AppConfigSupport extends MockFactory {
   def mockedConfig(bagIndex: BagIndex): Configuration = {
+    val cfgFile = File("src/main/assembly/dist/cfg")
     new Configuration(
       version = "testVersion",
       dansDoiPrefixes = Seq("10.17026/", "10.5072/"),
       dataverseIdAutority = "10.80270",
       bagIndex = bagIndex,
-      ddmRewriteRule = DdmRewriteRule(Map.empty, Map.empty)
+      ddmTransformer = new RuleTransformer(AbrRewriteRule(cfgFile))
     )
   }
 }

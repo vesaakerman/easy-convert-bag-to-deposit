@@ -61,6 +61,10 @@
 
         <!-- Scala utils -->
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.rogach</groupId>
             <artifactId>scallop_2.12</artifactId>
         </dependency>
