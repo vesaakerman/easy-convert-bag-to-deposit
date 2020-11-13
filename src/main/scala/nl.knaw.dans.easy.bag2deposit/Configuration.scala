@@ -22,7 +22,7 @@ import better.files.File.root
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.configuration.PropertiesConfiguration
 
-import scala.xml.transform.{ RewriteRule, RuleTransformer }
+import scala.xml.transform.RuleTransformer
 
 case class Configuration(version: String,
                          dansDoiPrefixes: Seq[String],

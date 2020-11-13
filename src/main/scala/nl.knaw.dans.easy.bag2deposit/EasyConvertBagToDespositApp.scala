@@ -25,7 +25,6 @@ import nl.knaw.dans.easy.bag2deposit.Command.FeedBackMessage
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import scala.util.{ Failure, Success, Try }
-import scala.xml.XML
 
 class EasyConvertBagToDespositApp(configuration: Configuration) extends DebugEnhancedLogging {
 

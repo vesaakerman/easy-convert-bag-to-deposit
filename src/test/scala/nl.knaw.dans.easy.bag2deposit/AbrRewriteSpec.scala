@@ -59,19 +59,19 @@ class AbrRewriteSpec extends AnyFlatSpec with Matchers {
       .getOrElse(fail("no DDM returned")) shouldBe normalized(ddm(
         <ddm:dcmiMetadata>
             <ddm:temporal xml:lang="nl"
-                          valueURI="http://www.rnaproject.org/data/330e7fe0-a1f7-43de-b448-d477898f6648"
+                          valueURI="https://data.cultureelerfgoed.nl/term/id/abr/330e7fe0-a1f7-43de-b448-d477898f6648"
                           subjectScheme="Archeologisch Basis Register"
-                          schemeURI="http://www.rnaproject.org"
+                          schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed"
             >Vroege Middeleeuwen A</ddm:temporal>
             <ddm:subject xml:lang="nl"
-                         valueURI="http://www.rnaproject.org/data/6ae3ab19-49ca-44a7-8b65-3a3395014bb9"
+                         valueURI="https://data.cultureelerfgoed.nl/term/id/abr/6ae3ab19-49ca-44a7-8b65-3a3395014bb9"
                          subjectScheme="Archeologisch Basis Register"
-                         schemeURI="http://www.rnaproject.org"
+                         schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed"
             >veenwinning (inclusief zouthoudend veen t.b.v. zoutproductie)</ddm:subject>
             <ddm:subject xml:lang="nl"
-                         valueURI="http://www.rnaproject.org/data/f182d72c-2d22-47ae-b799-26dea01e770c"
+                         valueURI="https://data.cultureelerfgoed.nl/term/id/abr/f182d72c-2d22-47ae-b799-26dea01e770c"
                          subjectScheme="Archeologisch Basis Register"
-                         schemeURI="http://www.rnaproject.org"
+                         schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed"
             >akker / tuin</ddm:subject>
         </ddm:dcmiMetadata>
     ))
