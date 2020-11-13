@@ -15,40 +15,20 @@
  */
 package nl.knaw.dans.easy.bag2deposit
 
-import java.nio.charset.Charset.defaultCharset
-import java.util.UUID
-
 import better.files.File
-import nl.knaw.dans.easy.bag2deposit.AbrRewriteRule.{ parseCsv, toXml }
-import nl.knaw.dans.lib.error._
+import nl.knaw.dans.easy.bag2deposit.AbrRewriteRule.{ find, isAbr, parse }
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.apache.commons.csv.{ CSVFormat, CSVParser, CSVRecord }
-import resource.managed
+import org.apache.commons.csv.CSVRecord
 
-import scala.collection.JavaConverters._
 import scala.xml.transform.RewriteRule
 import scala.xml.{ Elem, MetaData, Node, Text }
 
 case class AbrRewriteRule(cfgDir: File) extends RewriteRule {
 
   private val periodFile: File = cfgDir / "ABR-period.csv"
-  private val periodMap = parseCsvFile(periodFile, "ddm:temporal")
+  private val periodMap = parse(periodFile, "ddm:temporal")
   private val complexFile: File = cfgDir / "ABR-complex.csv"
-  private val complexMap = parseCsvFile(complexFile, "ddm:subject")
-
-  private def parseCsvFile(file: File, label: String): Map[String, Elem] = {
-    parseCsv(file, toXml).toMap.map {
-      case (key, xml) => (key, xml.copy(label = label))
-    }
-  }
-
-  private def find(key: String, map: Map[String, Node], file: File): Node = {
-    map.getOrElse(key, throw new Exception(s"$key not found in $file"))
-  }
-
-  private def isAbr(attr: MetaData) = {
-    attr.prefixedKey == "xsi:type" && attr.value.mkString("").startsWith("abr:ABR")
-  }
+  private val complexMap = parse(complexFile, "ddm:subject")
 
   override def transform(n: Node): Seq[Node] = n match {
     case Elem(_, "temporal", attr: MetaData, _, Text(key)) if isAbr(attr) => find(key, periodMap, periodFile)
@@ -57,10 +37,25 @@ case class AbrRewriteRule(cfgDir: File) extends RewriteRule {
   }
 }
 object AbrRewriteRule extends DebugEnhancedLogging {
+  val nrOfHeaderLines = 2
+
+  private def isAbr(attr: MetaData) = {
+    attr.prefixedKey == "xsi:type" && attr.value.mkString("").startsWith("abr:ABR")
+  }
+
+  private def find(key: String, map: Map[String, Node], file: File): Node = {
+    map.getOrElse(key, throw new Exception(s"$key not found in $file"))
+  }
+
+  private def parse(file: File, label: String): Map[String, Elem] = {
+    parseCsv(file, nrOfHeaderLines)
+      .map(toXml(label))
+      .toMap
+  }
 
   private def valueUri(uuid: String) = s"http://www.rnaproject.org/data/$uuid"
 
-  private def toXml(record: CSVRecord): (String, Elem) = {
+  private def toXml(label: String)(record: CSVRecord): (String, Elem) = {
     val description = record.size() match {
       case 4 => record.get(3)
       case 5 => s"${ record.get(3) }, ${ record.get(4) }" // one description contains a separator
@@ -72,17 +67,7 @@ object AbrRewriteRule extends DebugEnhancedLogging {
                            schemeURI={ "http://www.rnaproject.org" }
               >{ description }</label>
 
-    (record.get(0), xml)
-  }
-
-  def parseCsv[T](file: File, extract: CSVRecord => T): Iterable[T] = {
-    managed(CSVParser.parse(file.toJava, defaultCharset(), CSVFormat.RFC4180))
-      .map(parse(_).map(extract))
-      .tried
-  }.unsafeGetOrThrow
-
-  private def parse(parser: CSVParser): Iterable[CSVRecord] = {
-    parser.asScala.filter(_.asScala.nonEmpty).drop(2)
+    (record.get(0), xml.copy(label = label))
   }
 }
 

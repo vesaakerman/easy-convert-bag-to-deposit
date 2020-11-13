@@ -31,13 +31,13 @@ class AbrRewriteSpec extends AnyFlatSpec with Matchers {
   private val ddmTransformer = new RuleTransformer(AbrRewriteRule(cfgDir))
 
   "ABR-complex" should "be valid" in {
-    val records = AbrRewriteRule.parseCsv(cfgDir / "ABR-complex.csv", identity)
+    val records = parseCsv(cfgDir / "ABR-complex.csv", AbrRewriteRule.nrOfHeaderLines)
     records.map(tryUuid).filter(_.isFailure) shouldBe empty
     getDuplicates(records) shouldBe empty
   }
 
   "ABR-period" should "be valid" in {
-    val records = AbrRewriteRule.parseCsv(cfgDir / "ABR-period.csv", identity)
+    val records = parseCsv(cfgDir / "ABR-period.csv", AbrRewriteRule.nrOfHeaderLines)
     getDuplicates(records) shouldBe empty
     records.map(tryUuid).filter(_.isFailure) shouldBe empty
   }

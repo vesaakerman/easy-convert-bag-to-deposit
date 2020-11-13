@@ -16,13 +16,17 @@
 package nl.knaw.dans.easy
 
 import java.io.FileNotFoundException
-
+import java.nio.charset.Charset.defaultCharset
+import nl.knaw.dans.lib.error._
 import better.files.File
+import org.apache.commons.csv.{ CSVFormat, CSVParser, CSVRecord }
 import org.joda.time.format.{ DateTimeFormatter, ISODateTimeFormat }
 import org.joda.time.{ DateTime, DateTimeZone }
+import resource.managed
 
 import scala.util.{ Failure, Try }
 import scala.xml.{ Elem, Node, PrettyPrinter, SAXParseException, Utility, XML }
+import scala.collection.JavaConverters._
 
 package object bag2deposit {
 
@@ -33,6 +37,12 @@ package object bag2deposit {
   case class InvalidBagException(msg: String) extends Exception(msg)
 
   private val xsiURI = "http://www.w3.org/2001/XMLSchema-instance"
+
+  def parseCsv(file: File, nrOfHeaderLines: Int): Iterable[CSVRecord] = {
+    managed(CSVParser.parse(file.toJava, defaultCharset(), CSVFormat.RFC4180))
+      .map(_.asScala.filter(_.asScala.nonEmpty).drop(nrOfHeaderLines))
+      .tried.unsafeGetOrThrow
+  }
 
   implicit class RichNode(val left: Node) extends AnyVal {
 
