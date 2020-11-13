@@ -56,16 +56,11 @@ object AbrRewriteRule extends DebugEnhancedLogging {
   private def valueUri(uuid: String) = s"http://www.rnaproject.org/data/$uuid"
 
   private def toXml(label: String)(record: CSVRecord): (String, Elem) = {
-    val description = record.size() match {
-      case 4 => record.get(3)
-      case 5 => s"${ record.get(3) }, ${ record.get(4) }" // one description contains a separator
-      case _ => throw new IllegalArgumentException(s"not expected number of columns: $record")
-    }
     val xml = <label xml:lang="nl"
                            valueURI={ valueUri(record.get(2)) }
                            subjectScheme="Archeologisch Basis Register"
                            schemeURI={ "http://www.rnaproject.org" }
-              >{ description }</label>
+              >{ record.get(3) }</label>
 
     (record.get(0), xml.copy(label = label))
   }

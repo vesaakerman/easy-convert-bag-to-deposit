@@ -64,7 +64,7 @@ IWEG,INFR.WEG,5e581128-38bb-488b-8f29-78b02f99318e,weg
 IX,INFR.X,58a279bb-0f21-4845-8985-6f4e94d63880,infrastructuur
 NBAS,BEWV.BEXT,8396298f-678d-4731-9f51-89a1b7093fc4,kamp
 NEXT,BEWV.BEXT,8396298f-678d-4731-9f51-89a1b7093fc4,kamp
-NHP,BEWV.HP,88759e98-e8ed-475d-9759-d542e3f5dbe0,niet opgehoogde, individuele huisplaats
+NHP,BEWV.HP,88759e98-e8ed-475d-9759-d542e3f5dbe0,"niet opgehoogde, individuele huisplaats"
 NHT,BEWV.HT,c9f368dc-81e5-4d82-8f8f-8f7349a2f506,huisterp / huiswierde
 NKD,BEWV.VIC,1ca6c6a5-074e-459d-ac70-b07fc3370a0a,vicus
 NWD,BEWV.VIC,1ca6c6a5-074e-459d-ac70-b07fc3370a0a,vicus
