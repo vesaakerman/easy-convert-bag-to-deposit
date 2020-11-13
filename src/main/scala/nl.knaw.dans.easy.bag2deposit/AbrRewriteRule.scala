@@ -53,16 +53,15 @@ object AbrRewriteRule extends DebugEnhancedLogging {
       .toMap
   }
 
-  private def valueUri(uuid: String) = s"http://www.rnaproject.org/data/$uuid"
+  private def valueUri(uuid: String) = s"https://data.cultureelerfgoed.nl/term/id/abr/$uuid"
 
   private def toXml(label: String)(record: CSVRecord): (String, Elem) = {
     val xml = <label xml:lang="nl"
                            valueURI={ valueUri(record.get(2)) }
                            subjectScheme="Archeologisch Basis Register"
-                           schemeURI={ "http://www.rnaproject.org" }
+                           schemeURI={ "https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed" }
               >{ record.get(3) }</label>
 
     (record.get(0), xml.copy(label = label))
   }
 }
-
