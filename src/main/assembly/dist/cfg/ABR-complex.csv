@@ -1,0 +1,92 @@
+﻿,,Bron ABR+: export_AbrComplextypen_20150429T1621.xlsx,
+AltLabel (c01),PrefLabel (c01),Uri,PrefLabel (dut)
+DEPO,DEPO,78c8147a-9147-4908-aa18-d745b7a5cfc7,depot
+EGKW,GW.KW,22d64edb-6806-47c2-b11e-8cb294003801,kleiwinning
+EGMW,GW.MW,eda98bc1-ed94-4020-ae77-eaf37e3109e1,kalksteen-of mergelwinning
+EGVU,GW.VSW,ff6edaee-bf4d-440d-92f6-0b617053adde,vuursteenwinning
+EGX,GW.X,d6249f1b-457a-44f7-aa8e-2a6d8cc7b586,grondstofwinning
+EGYW,GW.IJW,29a3a0f4-caaf-4969-a73c-5689b3a06df6,ijzerertswinning
+EGZW,GW.VW,6ae3ab19-49ca-44a7-8b65-3a3395014bb9,veenwinning (inclusief zouthoudend veen t.b.v. zoutproductie)
+EGVW,GW.VW,6ae3ab19-49ca-44a7-8b65-3a3395014bb9,veenwinning (inclusief zouthoudend veen t.b.v. zoutproductie)
+EIB,IDNH.BR,70846f4f-f042-4b2f-a5df-2f20e538b900,bierbrouwerij
+EIBB,IDNH.BB,530b6f9c-de63-437a-89b2-0e86ad10fb00,beenbewerking
+EIGB,IDNH.GP,d955051b-9c6e-46eb-b345-f2ceed4946ac,glasproductie
+EIHB,IDNH.HB,a65cb5a1-4f7d-472c-8569-a1a4afeae38b,houtbewerking / schrijnwerkerswerkplaats
+EIHK,IDNH.HKB,4363b6d3-201a-4e52-9540-81565c54ae30,houtskool- of kolenbranderij
+EIKB,IDNH.KB,6c95b4c4-867f-49e7-a625-955b43d1f896,kalkbranderij
+EILL,IDNH.LL,aaaf737c-945c-4752-9cdd-fa447cab31d2,leerlooierij
+EIM,IDNH.M,b8a82cc2-06f0-49d9-806d-4b48d0c07476,molen
+EIMB,IDNH.MB,4e7262b9-d56f-48c7-b54c-648b8d275345,metaalbewerking / smederij / smelterij
+EISM,IDNH.MB,4e7262b9-d56f-48c7-b54c-648b8d275345,metaalbewerking / smederij / smelterij
+EIPB,IDNH.PB,4da951ec-8a4a-4b74-8022-d04be774d126,pottenbakkerij
+EISB,IDNH.SB,beafa101-f53a-4097-b9f7-66bd02af919e,steen- of pannenbakkerij
+EITN,IDNH.TN,ff058f9d-e9c3-4ea4-8ce6-0fbed1c30211,textielnijverheid
+EIVB,IDNH.VB,b3d68e8d-c170-4f1a-aff5-fef86f67d27f,vuursteenbewerking
+ELA,APVV.LA,f182d72c-2d22-47ae-b799-26dea01e770c,akker / tuin
+ELCF,APVV.CF,5bee5d85-24e5-42be-a1e1-f9f2ca7affab,celtic field
+ELDP,APVV.DP,7f8d3db9-d914-4f11-a1c0-9e6e6f4202a7,drenkplaats / dobbe
+ELEK,APVV.EK,296533a2-040f-4a7e-abbb-e9358fb6d4d0,eendenkooi
+ELVK,APVV.VK,9d776fde-40bf-415a-9aee-9ad11c93e897,veekraal / schaapskooi
+ELX,APVV.X,14d8a70d-673c-4887-b6c3-af7dd7d073e3,agrarische productie en voedselvoorziening
+ESCH,SV.X,ab0d0643-b026-4eb1-a5cf-e3ebfc0471be,scheepvaart
+EVX,APVV.VS,22f96b17-223f-4c52-a0ce-3a16569cc209,visserij
+EX,IDNH.X,33a3ae2f-9659-436f-9b48-2da01ef064d1,industrie en nijverheid
+EIX,IDNH.X,33a3ae2f-9659-436f-9b48-2da01ef064d1,industrie en nijverheid
+GCV,BGV.VG,c884c504-6e71-4ee5-b15c-e5736312763a,vlakgraf
+GIV,BGV.VG,c884c504-6e71-4ee5-b15c-e5736312763a,vlakgraf
+GXV,BGV.VG,c884c504-6e71-4ee5-b15c-e5736312763a,vlakgraf
+GD,BGV.DIER,424390ff-b53f-46c6-8c41-cbaf043d4459,dierengraf
+GHC,BGV.GH,75be5ade-97a2-475f-9c25-ac42f95d3801,grafheuvel
+GHIC,BGV.GH,75be5ade-97a2-475f-9c25-ac42f95d3801,grafheuvel
+GHI,BGV.GH,75be5ade-97a2-475f-9c25-ac42f95d3801,grafheuvel
+GHX,BGV.GH,75be5ade-97a2-475f-9c25-ac42f95d3801,grafheuvel
+GMEG,BGV.MEG,a38431c5-a5e5-4383-bf85-8e073e8d9308,megalietgraf
+GVC,BGV.VGV,57446eb6-180f-42d2-8d66-9ad626837750,vlakgrafveld
+GVI,BGV.GVI,7fb5402b-d0a0-4aa2-813d-a5cfbece67b0,"grafveld, inhumaties"
+GVIC,BGV.VGV,57446eb6-180f-42d2-8d66-9ad626837750,vlakgrafveld
+GVCU,BGV.UV,26da3542-0389-4b96-890d-e5c393fe8d17,urnenveld
+GVX,BGV.GVX,1e46e701-dd6c-4be1-a280-e0abd3150555,grafveld
+GVIK,BGV.KH,829ac50c-7d67-467c-9cfa-e42a740630c1,kerkhof
+GVIR,BGV.RGV,4362b9f4-3371-47dc-b928-48dae353ccf0,rijengrafveld
+GX,BGV.GX,dad3cbbc-937e-4049-a74c-529fca372b56,graf
+IBRU,INFR.BRUG,3d8a9af4-a036-4f37-8fe8-6f5e66c6517b,brug
+IDAM,INFR.DAM,422d1303-eb72-4ded-9935-c14cbe02f703,dam
+IDIJ,INFR.DIJ,64ba8c80-3a31-484b-95ef-75f854c3dc04,dijk
+IDUI,INFR.DUI,690cd955-345f-45f4-ae4d-7c841286372a,duiker
+IGEM,INFR.GEM,4cd2ea71-d4cc-4f3a-b484-0d19cc16317a,gemaal
+IHAV,INFR.HAV,f13c5044-99cc-4686-995e-2f324c76cf5d,haven
+IKAN,INFR.KAN,17bfe8b0-f949-4a38-bdfc-39712c58a366,kanaal
+IPER,INFR.PER,ca5f0803-81e1-42cc-9280-ae538609d7bd,afwateringskanaal / inundatiekanaal / greppel / sloot
+ISLU,INFR.SLU,6369a507-adf2-4b19-8916-04181aa3bb1b,sluis
+ISTE,INFR.KADE,eb7f38bb-abbc-41bd-8659-9d4250526b5a,kade / loswal
+IVW,INFR.VWEG,24c9fea0-5749-4f67-a3a0-cb470f0cb333,veenweg
+IWEG,INFR.WEG,5e581128-38bb-488b-8f29-78b02f99318e,weg
+IX,INFR.X,58a279bb-0f21-4845-8985-6f4e94d63880,infrastructuur
+NBAS,BEWV.BEXT,8396298f-678d-4731-9f51-89a1b7093fc4,kamp
+NEXT,BEWV.BEXT,8396298f-678d-4731-9f51-89a1b7093fc4,kamp
+NHP,BEWV.HP,88759e98-e8ed-475d-9759-d542e3f5dbe0,"niet opgehoogde, individuele huisplaats"
+NHT,BEWV.HT,c9f368dc-81e5-4d82-8f8f-8f7349a2f506,huisterp / huiswierde
+NKD,BEWV.VIC,1ca6c6a5-074e-459d-ac70-b07fc3370a0a,vicus
+NWD,BEWV.VIC,1ca6c6a5-074e-459d-ac70-b07fc3370a0a,vicus
+NRV,BEWV.RV,d2b65eb1-7f9a-4c36-9b6b-4a142a8e1c3c,(romeinse) villa
+NS,BEWV.SK,689ebb47-4f4b-41be-8b5a-cedcf4786363,nederzetting met stedelijk karakter
+NT,BEWV.TW,005b7f75-23bf-4d6f-8ab5-ac741e55a1ed,terp / wierde
+NVB,BEWV.MBH,0ad357a0-a73f-4dbd-bd22-b8967e90e9a1,moated site
+NVH,BEWV.MBH,0ad357a0-a73f-4dbd-bd22-b8967e90e9a1,moated site
+NMS,BEWV.MBH,0ad357a0-a73f-4dbd-bd22-b8967e90e9a1,moated site
+NX,BEWV.X,2179d872-888f-4807-a6d5-5e5afaa616c4,bewoning (inclusief verdediging)
+RCP,CTHD.RCP,c45892a6-982c-4f1e-b4e5-fc4bd19c7e14,cultusplaats / heiligom / tempel
+RKAP,CTHD.KPL,2ac4deb4-a12a-4aa1-baa1-496b0e649941,kapel
+RKER,CTHD.KERK,9d92bd03-6414-4bf9-bbc3-c948c5389f3b,kerk
+RKLO,CTHD.KLO,28e58033-875e-4f90-baa2-7b1c1c147574,klooster
+RX,CTHD.X,fc569e62-6d9a-4878-9cbc-baa5d23452d9,cultus / heiligdom
+VK,BEWV.KWB,052b197f-b720-404a-8199-00d5451041e3,kasteel
+VKW,BEWV.KWB,052b197f-b720-404a-8199-00d5451041e3,kasteel
+VKM,BEWV.VKM,c83b4c13-679c-4a02-a996-80afb6af2a78,mottekasteel
+VLP,BEWV.VLP,d8f8683f-0d24-4f13-b573-76edf8b75733,legerplaats
+VLW,BEWV.LW,0bd164a6-75cf-4af7-90e0-15c9b3c45db9,landweer
+VSCH,BEWV.SCH,93bcdb92-3d09-4984-b11c-01c7d3845faa,schans
+VWB,BEWV.WB,1b5b4dd1-f4f8-4e4c-9108-a6fb2c606cde,(ring)walburg
+VWP,BEWV.WP,8207e651-b143-428a-a92e-d1a5a98ba002,burgus / wachtpost
+VX,BEWV.VX,755ec670-c9d0-4bc8-bf38-1083b7c12155,versterking onbepaald
+XXX,XXX,5fbda024-be3e-47ac-a6c8-1c58d2cf5ccc,complextype niet te bepalen

@@ -22,10 +22,13 @@ import better.files.File.root
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.configuration.PropertiesConfiguration
 
+import scala.xml.transform.RuleTransformer
+
 case class Configuration(version: String,
                          dansDoiPrefixes: Seq[String],
                          dataverseIdAutority: String,
                          bagIndex: BagIndex,
+                         ddmTransformer: RuleTransformer,
                         )
 
 object Configuration extends DebugEnhancedLogging {
@@ -49,7 +52,8 @@ object Configuration extends DebugEnhancedLogging {
       version,
       dansDoiPrefixes = properties.getStringArray("dans-doi.prefixes"),
       dataverseIdAutority = properties.getString("dataverse.id-authority"),
-      bagIndex = BagIndex(new URI(properties.getString("bag-index.url")))
+      bagIndex = BagIndex(new URI(properties.getString("bag-index.url"))),
+      ddmTransformer = new RuleTransformer(AbrRewriteRule(cfgPath))
     )
   }
 }
