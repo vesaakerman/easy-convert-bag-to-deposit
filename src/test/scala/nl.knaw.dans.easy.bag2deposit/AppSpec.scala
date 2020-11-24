@@ -18,14 +18,15 @@ package nl.knaw.dans.easy.bag2deposit
 import better.files.File
 import nl.knaw.dans.bag.v0.DansV0Bag.EASY_USER_ACCOUNT_KEY
 import nl.knaw.dans.easy.bag2deposit.BagSource._
-import nl.knaw.dans.easy.bag2deposit.Fixture.{ AppConfigSupport, BagIndexSupport, FileSystemSupport }
+import nl.knaw.dans.easy.bag2deposit.Fixture.{ AppConfigSupport, FileSystemSupport }
 import nl.knaw.dans.easy.bag2deposit.IdType._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import scalaj.http.HttpResponse
 
 import scala.util.Success
 
-class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileSystemSupport with BagIndexSupport {
+class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileSystemSupport {
   private val validUUID = "04e638eb-3af1-44fb-985d-36af12fccb2d"
   private val srcDir = testDir / "exports" / validUUID / "bag-revision-1"
   private val targetDir = testDir / "ingest-dir" / validUUID / "bag-revision-1"
@@ -38,7 +39,7 @@ class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileS
     (srcDir / "bag-info.txt").contentAsString should include(EASY_USER_ACCOUNT_KEY)
     val manifestContent = (srcDir / "tagmanifest-sha1.txt").contentAsString
 
-    val appConfig = mockedConfig(null)
+    val appConfig = testConfig(null)
     new EasyConvertBagToDespositApp(appConfig).addPropsToBags(
       (testDir / "exports").children,
       None,
@@ -58,7 +59,16 @@ class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileS
     // pre condition
     srcDir / ".." / "deposit.properties" shouldNot exist
 
-    val appConfig = mockedConfig(mockBagIndexRespondsWith("", 404)) // base bag not found
+    val delegate = mock[MockBagIndex]
+    val noBaseBagUUID = "87151a3a-12ed-426a-94f2-97313c7ae1f2"
+    (delegate.execute(_: String)) expects s"/bag-sequence?contains=$validUUID" returning
+      new HttpResponse[String]("123", 200, Map.empty)
+    (delegate.execute(_: String)) expects s"/bag-sequence?contains=$noBaseBagUUID" returning
+      new HttpResponse[String]("123", 200, Map.empty)
+    (delegate.execute(_: String)) expects s"/bags/4722d09d-e431-4899-904c-0733cd773034" returning
+      new HttpResponse[String]("<result><bag-info><urn>urn:nbn:nl:ui:13-z4-f8cm</urn></bag-info></result>", 200, Map.empty)
+    val appConfig = testConfig(delegatingBagIndex(delegate))
+
     new EasyConvertBagToDespositApp(appConfig).addPropsToBags(
       (testDir / "exports").children,
       maybeOutputDir = Some((testDir / "ingest-dir").createDirectories()),
@@ -66,8 +76,8 @@ class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileS
     ) shouldBe Success("No fatal errors")
 
     // post condition
-    targetDir / ".." / "deposit.properties" should exist
-    // other changes verified in other test
+    (targetDir / ".." / "deposit.properties").contentAsString should include ("dataverse.id-identifier = dans-2xg-umq8")
+    // other details verified in other test, note that the DOI has no prefix
 
     // TODO (manually) intercept logging: the bag names should reflect the errors
     //  no variation in bag-info.txt not found or a property in that file not found

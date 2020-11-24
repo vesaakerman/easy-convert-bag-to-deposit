@@ -25,18 +25,25 @@ import org.apache.commons.configuration.PropertiesConfiguration
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import scalaj.http.HttpResponse
 
 import scala.util.Success
 import scala.xml.XML
 
 class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with BagIndexSupport with BagSupport with MockFactory {
 
-  "create" should "not call the bag-index" in {
+  "create" should "call the bag-index for the sequence only" in {
     val uuid = "04e638eb-3af1-44fb-985d-36af12fccb2d"
     val bagDir = File("src/test/resources/bags/01") / uuid / "bag-revision-1"
-    DepositPropertiesFactory(mockedConfig(null), IdType.DOI, BagSource.VAULT)
+
+    val delegate = mock[MockBagIndex]
+    (delegate.execute(_: String)) expects s"/bag-sequence?contains=$uuid" returning
+      new HttpResponse[String](body = "123", code = 200, Map.empty)
+    val cfg = testConfig(delegatingBagIndex(delegate))
+
+    DepositPropertiesFactory(cfg, IdType.DOI, BagSource.VAULT)
       .create(
-        BagInfo(bagDir, mockBag(bagDir).getMetadata, requireBaseUrnWithVersionOf = false).unsafeGetOrThrow,
+        BagInfo(bagDir, mockBag(bagDir).getMetadata).unsafeGetOrThrow,
         ddm = XML.loadFile((bagDir / "metadata" / "dataset.xml").toJava),
       ).map(serialize) shouldBe Success(
       s"""state.label = SUBMITTED
@@ -81,7 +88,14 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
                 </ddm:dcmiMetadata>
               </ddm:DDM>
 
-    DepositPropertiesFactory(mockedConfig(mockBagIndexRespondsWith(bagIndexBody, 200)), IdType.URN, BagSource.VAULT)
+    val delegate = mock[MockBagIndex]
+    (delegate.execute(_: String)) expects s"/bags/$baseUUID" returning
+      new HttpResponse[String](body = bagIndexBody, code = 200, Map.empty)
+    (delegate.execute(_: String)) expects s"/bag-sequence?contains=$bagUUID" returning
+      new HttpResponse[String](body = "123", code = 200, Map.empty)
+    val cfg = testConfig(delegatingBagIndex(delegate))
+
+    DepositPropertiesFactory(cfg, IdType.URN, BagSource.VAULT)
       .create(bagInfo, ddm)
       .map(serialize) shouldBe Success(
       s"""state.label = SUBMITTED
@@ -98,7 +112,7 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
          |dataverse.bag-id = urn:uuid:$bagUUID
          |dataverse.nbn = urn:nbn:nl:ui:13-z4-f8cm
          |dataverse.id-protocol = urn
-         |dataverse.id-identifier = urn:nbn:nl:ui:13-00-3haq
+         |dataverse.id-identifier = z4-f8cm
          |dataverse.id-authority = nbn:nl:ui:13
          |""".stripMargin
     )
@@ -107,17 +121,7 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
   it should "use base urn from bag-info.txt" in {
     val bagUUID = UUID.randomUUID()
     val baseUUID = UUID.randomUUID()
-    val bagIndexBody =
-      """<result>
-        |    <bag-info>
-        |        <bag-id>38cb3ff1-d59d-4560-a423-6f761b237a56</bag-id>
-        |        <base-id>38cb3ff1-d59d-4560-a423-6f761b237a56</base-id>
-        |        <created>2016-11-13T00:41:11.000+01:00</created>
-        |        <doi>10.80270/test-28m-zann</doi>
-        |        <urn>urn:nbn:nl:ui:13-z4-f8cm</urn>
-        |    </bag-info>
-        |</result>""".stripMargin
-    val bagInfo = BagInfo(userId = "user001", created = "2017-01-16T14:35:00.888+01:00", uuid = bagUUID, bagName = "bag-name", versionOf = Some(baseUUID), Some("rabarbera"))
+    val bagInfo = BagInfo(userId = "user001", created = "2017-01-16T14:35:00.888+01:00", uuid = bagUUID, bagName = "bag-name", versionOf = Some(baseUUID), Some("urn:nbn:nl:ui:13-rabarbera"))
     val ddm = <ddm:DDM xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <ddm:dcmiMetadata>
                   <dcterms:identifier xsi:type="id-type:DOI">10.5072/dans-2xg-umq8</dcterms:identifier>
@@ -126,7 +130,9 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
                 </ddm:dcmiMetadata>
               </ddm:DDM>
 
-    DepositPropertiesFactory(mockedConfig(null), IdType.URN, BagSource.FEDORA)
+    val cfg = testConfig(delegatingBagIndex(mock[MockBagIndex]))
+
+    DepositPropertiesFactory(cfg, IdType.URN, BagSource.FEDORA)
       .create(bagInfo, ddm)
       .map(serialize) shouldBe Success(
       s"""state.label = SUBMITTED
@@ -137,9 +143,9 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
          |identifier.doi = 10.5072/dans-2xg-umq8
          |identifier.urn = urn:nbn:nl:ui:13-00-3haq
          |identifier.fedora = easy-dataset:162288
-         |dataverse.nbn = rabarbera
+         |dataverse.nbn = urn:nbn:nl:ui:13-rabarbera
          |dataverse.id-protocol = urn
-         |dataverse.id-identifier = urn:nbn:nl:ui:13-00-3haq
+         |dataverse.id-identifier = rabarbera
          |dataverse.id-authority = nbn:nl:ui:13
          |""".stripMargin
     )
@@ -155,7 +161,12 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
                 </ddm:dcmiMetadata>
               </ddm:DDM>
 
-    DepositPropertiesFactory(mockedConfig(null), IdType.URN, BagSource.VAULT)
+    val delegate = mock[MockBagIndex]
+    (delegate.execute(_: String)) expects s"/bag-sequence?contains=$bagUUID" returning
+      new HttpResponse[String](body = "123", code = 200, Map.empty)
+    val cfg = testConfig(delegatingBagIndex(delegate))
+
+    DepositPropertiesFactory(cfg, IdType.URN, BagSource.VAULT)
       .create(bagInfo, ddm)
       .map(serialize) shouldBe Success(
       s"""state.label = SUBMITTED
@@ -173,7 +184,7 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
          |dataverse.nbn = urn:nbn:nl:ui:13-00-3haq
          |dataverse.other-id = https://doi.org/10.12345/foo-bar
          |dataverse.id-protocol = urn
-         |dataverse.id-identifier = urn:nbn:nl:ui:13-00-3haq
+         |dataverse.id-identifier = 00-3haq
          |dataverse.id-authority = nbn:nl:ui:13
          |""".stripMargin
     )
