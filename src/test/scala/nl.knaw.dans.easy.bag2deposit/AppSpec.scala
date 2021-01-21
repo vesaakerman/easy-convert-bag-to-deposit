@@ -16,6 +16,7 @@
 package nl.knaw.dans.easy.bag2deposit
 
 import better.files.File
+import nl.knaw.dans.bag.v0.DansV0Bag
 import nl.knaw.dans.bag.v0.DansV0Bag.EASY_USER_ACCOUNT_KEY
 import nl.knaw.dans.easy.bag2deposit.BagSource._
 import nl.knaw.dans.easy.bag2deposit.Fixture.{ AppConfigSupport, FileSystemSupport }
@@ -40,7 +41,7 @@ class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileS
     val manifestContent = (srcDir / "tagmanifest-sha1.txt").contentAsString
 
     val appConfig = testConfig(null)
-    new EasyConvertBagToDespositApp(appConfig).addPropsToBags(
+    new EasyConvertBagToDepositApp(appConfig).addPropsToBags(
       (testDir / "exports").children,
       None,
       DepositPropertiesFactory(appConfig, URN, FEDORA)
@@ -69,14 +70,14 @@ class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileS
       new HttpResponse[String]("<result><bag-info><urn>urn:nbn:nl:ui:13-z4-f8cm</urn><doi>10.5072/dans-2xg-umq8</doi></bag-info></result>", 200, Map.empty)
     val appConfig = testConfig(delegatingBagIndex(delegate))
 
-    new EasyConvertBagToDespositApp(appConfig).addPropsToBags(
+    new EasyConvertBagToDepositApp(appConfig).addPropsToBags(
       (testDir / "exports").children,
       maybeOutputDir = Some((testDir / "ingest-dir").createDirectories()),
       DepositPropertiesFactory(appConfig, DOI, VAULT)
     ) shouldBe Success("No fatal errors")
 
     // post condition
-    (targetDir / ".." / "deposit.properties").contentAsString should include ("dataverse.id-identifier = dans-2xg-umq8")
+    (targetDir / ".." / "deposit.properties").contentAsString should include("dataverse.id-identifier = dans-2xg-umq8")
     // other details verified in other test, note that the DOI has no prefix
 
     // TODO (manually) intercept logging: the bag names should reflect the errors
