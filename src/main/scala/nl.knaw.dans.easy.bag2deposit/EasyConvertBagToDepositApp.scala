@@ -19,13 +19,13 @@ import better.files.File
 import better.files.File.CopyOptions
 import nl.knaw.dans.bag.v0.DansV0Bag
 import nl.knaw.dans.easy.bag2deposit.Command.FeedBackMessage
-import nl.knaw.dans.easy.bag2deposit.ddm.LanguageRewriteRule
-import nl.knaw.dans.easy.bag2deposit.ddm.LanguageRewriteRule.logNotMapped
+import nl.knaw.dans.easy.bag2deposit.ddm.Provenance
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import java.io.{ FileNotFoundException, IOException }
+import scala.collection.mutable.ListBuffer
 import scala.util.{ Failure, Success, Try }
-import scala.xml.Node
+import scala.xml.NodeSeq
 
 class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnhancedLogging {
 
@@ -33,28 +33,33 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
                      maybeOutputDir: Option[File],
                      properties: DepositPropertiesFactory,
                     ): Try[FeedBackMessage] = {
-    bagParentDirs
+    val triedString = bagParentDirs
       .map(addProps(properties, maybeOutputDir))
       .collectFirst { case Failure(e) => Failure(e) }
       .getOrElse(Success(s"No fatal errors")) // TODO show number of false/true values
+    logMatchedReports()
+    triedString
   }
 
-  def formatDiff(generated: Node, modified: Node): Option[String] = {
-    val original = normalized(generated).split("\n")
-    val changed = normalized(modified).split("\n")
-    val diff1 = original.diff(changed).mkString("\n").trim
-    val diff2 = changed.diff(original).mkString("\n").trim
-    if (diff1.nonEmpty || diff2.nonEmpty)
-      Some(
-        s"""===== only in old DDM
-           |
-           |$diff1
-           |
-           |===== only in new DDM by ${ getClass.getSimpleName } ${ configuration.version }
-           |
-           |$diff2
-           |""".stripMargin)
-    else None
+  private val reportMatches = configuration.ddmTransformer.reportRewriteRule.reportMap.map(reportCfg =>
+    reportCfg.uuid -> new ListBuffer[String]()
+  ).toMap
+
+  def registerMatchedReports(urn: String, reports: NodeSeq): Unit = {
+    reports.foreach { node =>
+      val reportUuid = (node \@ "valueURI").replaceAll(".*/", "")
+      Try(reportMatches(reportUuid) += s"\t$urn\t${ node.text }")
+        .getOrElse(logger.error(s"Could not register matched report $urn $reportUuid ${ node.text }"))
+    }
+  }
+
+  def logMatchedReports(): Unit = {
+    val uuidToReportLabel = configuration.ddmTransformer.reportRewriteRule.reportMap
+      .map(r => r.uuid -> r.label).toMap
+    reportMatches.foreach { case (reportUuid, matches) =>
+      val label = uuidToReportLabel.getOrElse(reportUuid, reportUuid)
+      logger.info(s"$label\n${ matches.mkString("\n") }")
+    }
   }
 
   private def addProps(depositPropertiesFactory: DepositPropertiesFactory, maybeOutputDir: Option[File])
@@ -70,20 +75,22 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
       bag <- BagFacade.getBag(bagDir)
       mutableBagMetadata = bag.getMetadata
       bagInfo <- BagInfo(bagDir, mutableBagMetadata)
-      _ = logger.debug(s"$bagInfo")
+      _ = logger.info(s"$bagInfo")
       ddmFile = bagDir / "metadata" / "dataset.xml"
       ddmIn <- loadXml(ddmFile)
-      ddmOut <- configuration.ddmTransformer.transform(ddmIn)
-      _ = formatDiff(ddmIn, ddmOut).foreach(s => logger.info(s))
+      props <- depositPropertiesFactory.create(bagInfo, ddmIn)
+      datasetId = props.getString("identifier.fedora", "")
+      ddmOut <- configuration.ddmTransformer.transform(ddmIn, datasetId)
+      _ = Provenance(ddmIn, ddmOut, s"${ getClass.getSimpleName } ${ configuration.version }")
+        .foreach(s => logger.info(s))
+      _ = registerMatchedReports(datasetId, ddmOut \\ "reportNumber")
       _ = ddmFile.writeText(ddmOut.serialize)
-      props <- depositPropertiesFactory.create(bagInfo, ddmOut)
-      _ = logNotMapped(ddmOut, props.getString("identifier.fedora", ""))
       _ = props.save((bagParentDir / "deposit.properties").toJava)
       _ = bagInfoKeysToRemove.foreach(mutableBagMetadata.remove)
       _ <- BagFacade.updateMetadata(bag)
       _ <- BagFacade.updateManifest(bag)
       _ = maybeOutputDir.foreach(move(bagParentDir))
-      _ = logger.info(s"OK $bagParentDir")
+      _ = logger.info(s"OK $datasetId ${ bagParentDir.name }/${ bagDir.name }")
     } yield true
   }.recoverWith {
     case e: InvalidBagException =>

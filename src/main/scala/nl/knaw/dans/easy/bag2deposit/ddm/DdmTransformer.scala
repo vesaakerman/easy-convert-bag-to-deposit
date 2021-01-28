@@ -17,61 +17,76 @@ package nl.knaw.dans.easy.bag2deposit.ddm
 
 import better.files.File
 import nl.knaw.dans.easy.bag2deposit.InvalidBagException
+import nl.knaw.dans.easy.bag2deposit.ddm.LanguageRewriteRule.logNotMappedLanguages
+import nl.knaw.dans.easy.bag2deposit.ddm.ReportRewriteRule.logBriefRapportTitles
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
+import scala.collection.mutable.ListBuffer
 import scala.util.{ Failure, Success, Try }
 import scala.xml.transform.{ RewriteRule, RuleTransformer }
 import scala.xml.{ Node, NodeSeq }
 
 case class DdmTransformer(cfgDir: File) extends DebugEnhancedLogging {
 
-  private val reportRewriteRule = ReportRewriteRule(cfgDir)
-  private val profileRuleTransformer = new RuleTransformer(reportRewriteRule)
-  private val dcmiMetadataRuleTransformer = new RuleTransformer(
+  val reportRewriteRule: ReportRewriteRule = ReportRewriteRule(cfgDir)
+  private val acquisitionRewriteRule: AcquisitionRewriteRule = AcquisitionRewriteRule(cfgDir)
+  private val profileTitleRuleTransformer = new RuleTransformer(
+    acquisitionRewriteRule,
+    reportRewriteRule,
+  )
+  private val archaeologyRuleTransformer = new RuleTransformer(
+    acquisitionRewriteRule,
     reportRewriteRule,
     AbrRewriteRule(cfgDir / "ABR-period.csv", "temporal", "ddm:temporal"),
     AbrRewriteRule(cfgDir / "ABR-complex.csv", "subject", "ddm:subject"),
     LanguageRewriteRule(cfgDir / "languages.csv"),
   )
+  private val standardRuleTransformer = new RuleTransformer(
+    LanguageRewriteRule(cfgDir / "languages.csv"),
+  )
 
-  private case class DdmRewriteRule(reportNumberFromFirstTitle: NodeSeq) extends RewriteRule {
+  private case class ArchaeologyRewriteRule(fromFirstTitle: NodeSeq) extends RewriteRule {
     override def transform(n: Node): Seq[Node] = {
       if (n.label != "dcmiMetadata") n
       else <dcmiMetadata>
-             { dcmiMetadataRuleTransformer(n).nonEmptyChildren }
-             { reportNumberFromFirstTitle }
+             { fromFirstTitle }
+             { archaeologyRuleTransformer(n).nonEmptyChildren }
            </dcmiMetadata>.copy(prefix = n.prefix, attributes = n.attributes, scope = n.scope)
     }
   }
 
-  def transform(ddmIn: Node): Try[Node] = {
+  def transform(ddmIn: Node, datasetId: String): Try[Node] = {
 
-    // the single title may become a title and/or reportNumber
-    val transformedFirstTitle = (ddmIn \ "profile" \ "title").flatMap(profileRuleTransformer)
-    val reportNumberFromFirstTitle = transformedFirstTitle.filter(_.label == "reportNumber")
-    val notConvertedFirstTitle = transformedFirstTitle.filter(_ => reportNumberFromFirstTitle.isEmpty)
-
-    // the transformation
-    val ddmRuleTransformer = new RuleTransformer(DdmRewriteRule(reportNumberFromFirstTitle))
-    val ddmOut = ddmRuleTransformer(ddmIn)
-
-    // logging and error handling
-    val notConvertedTitles = (ddmOut \ "dcmiMetadata" \ "title") ++ notConvertedFirstTitle
-    logBriefRapportTitles(notConvertedTitles, ddmOut)
-    val problems = ddmOut \\ "notImplemented" // fail slow trick
-    if (problems.nonEmpty)
-      Failure(InvalidBagException(problems.map(_.text).mkString("; ")))
-    else ddmOut.headOption.map(Success(_))
-      .getOrElse(Failure(InvalidBagException("DDM transformation returned empty sequence")))
-  }
-
-  private def logBriefRapportTitles(notConvertedTitles: NodeSeq, ddmOut: Node): Unit = {
-    // these titles need a more complex transformation or manual fix before the final export
-    notConvertedTitles.foreach { node =>
-      val title = node.text
-      if (title.toLowerCase.matches(s"brief[^a-z]*rapport${ reportRewriteRule.nrTailRegexp } }"))
-        logger.info(s"briefrapport rightsHolder=[${ ddmOut \ "rightsHolder" }] publisher=[${ ddmOut \ "publisher" }] titles=[$title]")
+    if (!(ddmIn \ "profile" \ "audience").text.contains("D37000")) {
+      // not archaeological
+      Success(standardRuleTransformer(ddmIn))
     }
+    else {
+      // a title in the profile will not change but may produce something for dcmiMetadata
+      val originalProfile = ddmIn \ "profile"
+      val transformedProfile = originalProfile.flatMap(profileTitleRuleTransformer)
+      val fromFirstTitle = transformedProfile.flatMap(_.nonEmptyChildren)
+        .diff(originalProfile.flatMap(_.nonEmptyChildren))
+      val notConvertedFirstTitle = transformedProfile \ "title"
+
+      // the transformation
+      val ddmRuleTransformer = new RuleTransformer(ArchaeologyRewriteRule(fromFirstTitle))
+      val ddmOut = ddmRuleTransformer(ddmIn)
+
+      // logging
+      val notConvertedTitles = (ddmOut \ "dcmiMetadata" \ "title") ++ notConvertedFirstTitle
+      logBriefRapportTitles(notConvertedTitles, ddmOut, datasetId)
+
+      // error handling (fail slow on not found ABR period/complex)
+      val problems = ddmOut \\ "notImplemented"
+      if (problems.nonEmpty)
+        Failure(InvalidBagException(problems.map(_.text).mkString("; ")))
+      else ddmOut.headOption.map(Success(_))
+        .getOrElse(Failure(InvalidBagException("DDM transformation returned empty sequence")))
+    }
+  }.map { ddm =>
+    logNotMappedLanguages(ddm, datasetId)
+    ddm
   }
 }
 

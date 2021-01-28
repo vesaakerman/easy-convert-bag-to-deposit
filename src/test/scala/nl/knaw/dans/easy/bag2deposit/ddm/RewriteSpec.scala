@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.knaw.dans.easy.bag2deposit
+package nl.knaw.dans.easy.bag2deposit.ddm
 
 import better.files.File
 import nl.knaw.dans.easy.bag2deposit.Fixture.SchemaSupport
-import nl.knaw.dans.easy.bag2deposit.ddm.{ AbrRewriteRule, LanguageRewriteRule }
+import nl.knaw.dans.easy.bag2deposit.ddm.LanguageRewriteRule.logNotMappedLanguages
+import nl.knaw.dans.easy.bag2deposit.{ Configuration, EasyConvertBagToDepositApp, InvalidBagException, normalized, parseCsv }
 import org.apache.commons.csv.CSVRecord
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -29,7 +30,7 @@ import scala.xml.NodeBuffer
 class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
   private val cfgDir: File = File("src/main/assembly/dist/cfg")
   private val cfg = Configuration(cfgDir.parent)
-  override val schema = "https://raw.githubusercontent.com/DANS-KNAW/easy-schema/a7b54e1/lib/src/main/resources/md/ddm/ddm.xsd"
+  override val schema = "https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd"
 
   private val mandatoryInProfile =
           <dct:description>YYY</dct:description>
@@ -40,7 +41,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
           </dcx-dai:creatorDetails>
           <ddm:created>2013-03</ddm:created>
           <ddm:available>2013-04</ddm:available>
-          <ddm:audience>D35400</ddm:audience>
+          <ddm:audience>D37000</ddm:audience>
           <ddm:accessRights>OPEN_ACCESS</ddm:accessRights>
 
   "ABR-complex" should "be valid" in {
@@ -68,7 +69,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
         <ddm:dcmiMetadata>
             <dc:title>blabla</dc:title>
             <dc:title>Rapport 456</dc:title>
-            <dc:title>Transect-rapport 2859: Een Archeologisch Bureauonderzoek. Ellecom, glasvezeltracé Eikenstraat, Gemeente Rheden (GD).</dc:title>
+            <dct:alternative>Transect-rapport 2859: Een Archeologisch Bureauonderzoek. Ellecom, glasvezeltracé Eikenstraat, Gemeente Rheden (GD).</dct:alternative>
             <dc:title>rabarbera</dc:title>
             <dc:title>Archeologische Berichten Nijmegen – Briefrapport 21</dc:title>
             <dcterms:temporal xsi:type="abr:ABRperiode">VMEA</dcterms:temporal>
@@ -83,6 +84,12 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
           { mandatoryInProfile }
         </ddm:profile>
         <ddm:dcmiMetadata>
+            <ddm:reportNumber
+              schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e"
+              valueURI="https://data.cultureelerfgoed.nl/term/id/abr/fcff6035-9e90-450f-8b39-cf33447e6e9f"
+              subjectScheme="ABR Rapporten"
+              reportNo="123"
+            >Rapport 123</ddm:reportNumber>
             <dc:title>blabla</dc:title>
             <ddm:reportNumber
               schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e"
@@ -96,7 +103,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
               subjectScheme="ABR Rapporten"
               reportNo="2859"
             >Transect-rapport 2859</ddm:reportNumber>
-            <dc:title>Transect-rapport 2859: Een Archeologisch Bureauonderzoek. Ellecom, glasvezeltracé Eikenstraat, Gemeente Rheden (GD).</dc:title>
+            <dct:alternative>Transect-rapport 2859: Een Archeologisch Bureauonderzoek. Ellecom, glasvezeltracé Eikenstraat, Gemeente Rheden (GD).</dct:alternative>
             <dc:title>rabarbera</dc:title>
             <dc:title>Archeologische Berichten Nijmegen – Briefrapport 21</dc:title>
             <ddm:temporal xml:lang="nl"
@@ -114,48 +121,17 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
                          subjectScheme="Archeologisch Basis Register"
                          schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed"
             >akker / tuin</ddm:subject>
-            <ddm:reportNumber
-              schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e"
-              valueURI="https://data.cultureelerfgoed.nl/term/id/abr/fcff6035-9e90-450f-8b39-cf33447e6e9f"
-              subjectScheme="ABR Rapporten"
-              reportNo="123"
-            >Rapport 123</ddm:reportNumber>
         </ddm:dcmiMetadata>
     )
 
-    new EasyConvertBagToDepositApp(cfg.copy(version = "x.y.z")).formatDiff(ddmIn, expectedDDM) shouldBe Some(
-      """===== only in old DDM
-        |
-        |<dc:title>Rapport 456</dc:title>
-        |<dcterms:temporal xsi:type="abr:ABRperiode">VMEA</dcterms:temporal>
-        |<dc:subject xsi:type="abr:ABRcomplex">EGVW</dc:subject>
-        |<dcterms:subject xsi:type="abr:ABRcomplex">ELA</dcterms:subject>
-        |
-        |===== only in new DDM by EasyConvertBagToDepositApp x.y.z
-        |
-        |<ddm:reportNumber  schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e" valueURI="https://data.cultureelerfgoed.nl/term/id/abr/fcff6035-9e90-450f-8b39-cf33447e6e9f" subjectScheme="ABR Rapporten" reportNo="456">
-        | Rapport 456
-        |</ddm:reportNumber>
-        |<ddm:reportNumber  schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e" valueURI="https://data.cultureelerfgoed.nl/term/id/abr/90f3092a-818e-4db2-8467-35b64262c5b3" subjectScheme="ABR Rapporten" reportNo="2859">
-        | Transect-rapport 2859
-        |</ddm:reportNumber>
-        |<ddm:temporal  xml:lang="nl" valueURI="https://data.cultureelerfgoed.nl/term/id/abr/330e7fe0-a1f7-43de-b448-d477898f6648" subjectScheme="Archeologisch Basis Register" schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed">
-        | Vroege Middeleeuwen A
-        |</ddm:temporal>
-        |<ddm:subject  xml:lang="nl" valueURI="https://data.cultureelerfgoed.nl/term/id/abr/6ae3ab19-49ca-44a7-8b65-3a3395014bb9" subjectScheme="Archeologisch Basis Register" schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed">
-        | veenwinning (inclusief zouthoudend veen t.b.v. zoutproductie)
-        |</ddm:subject>
-        |<ddm:subject  xml:lang="nl" valueURI="https://data.cultureelerfgoed.nl/term/id/abr/f182d72c-2d22-47ae-b799-26dea01e770c" subjectScheme="Archeologisch Basis Register" schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed">
-        | akker / tuin
-        |</ddm:subject>
-        |<ddm:reportNumber  schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e" valueURI="https://data.cultureelerfgoed.nl/term/id/abr/fcff6035-9e90-450f-8b39-cf33447e6e9f" subjectScheme="ABR Rapporten" reportNo="123">
-        | Rapport 123
-        |</ddm:reportNumber>
-        |""".stripMargin
-    )
+    val app = new EasyConvertBagToDepositApp(cfg)
 
-    cfg.ddmTransformer.transform(ddmIn).map(normalized)
+    // a few steps of EasyConvertBagToDepositApp.addPropsToBags
+    val datasetId = "easy-dataset:123"
+    cfg.ddmTransformer.transform(ddmIn, datasetId).map(normalized)
       .getOrElse(fail("no DDM returned")) shouldBe normalized(expectedDDM)
+    app.registerMatchedReports(datasetId, expectedDDM \\ "reportNumber")
+    app.logMatchedReports() // once for all datasets
 
     assume(schemaIsAvailable)
     validate(expectedDDM) shouldBe Success(())
@@ -170,6 +146,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
         <ddm:dcmiMetadata>
           <dcterms:language>in het Nederlands</dcterms:language>
           <dc:language>Engels</dc:language>
+          <dct:language>nld</dct:language>
           <dc:language>ratjetoe</dc:language>
           <dc:language xsi:type='dcterms:ISO639-3'> huh</dc:language>
           <dc:language xsi:type='dcterms:ISO639-3'> nld </dc:language>
@@ -186,6 +163,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
         <ddm:dcmiMetadata>
           <ddm:language encodingScheme="ISO639-2" code="dut">in het Nederlands</ddm:language>
           <ddm:language encodingScheme="ISO639-2" code="eng">Engels</ddm:language>
+          <ddm:language encodingScheme="ISO639-2" code="dut">nld</ddm:language>
           <dc:language>ratjetoe</dc:language>
           <dc:language xsi:type='dcterms:ISO639-3'> huh</dc:language>
           <ddm:language encodingScheme='ISO639-2' code="dut">Dutch</ddm:language>
@@ -194,11 +172,12 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
           <ddm:language encodingScheme='ISO639-2' code="fre">French</ddm:language>
         </ddm:dcmiMetadata>
     )
-    cfg.ddmTransformer.transform(ddmIn).map(normalized)
+    val datasetId = "eas-dataset:123"
+    cfg.ddmTransformer.transform(ddmIn, datasetId).map(normalized)
       .getOrElse(fail("no DDM returned")) shouldBe normalized(expectedDDM)
 
     // TODO manually check logging of not mapped language fields
-    LanguageRewriteRule.logNotMapped(expectedDDM,"eas-dataset:123")
+    logNotMappedLanguages(expectedDDM, datasetId)
 
     assume(schemaIsAvailable)
     validate(expectedDDM) shouldBe Success(())
@@ -214,14 +193,14 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
         </ddm:dcmiMetadata>
     )
 
-    cfg.ddmTransformer.transform(ddmIn).map(normalized) shouldBe Success(normalized(ddmIn))
+    cfg.ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe Success(normalized(ddmIn))
     // TODO manually check logging of briefrapport
   }
 
   it should "add report number of profile to dcmiMetadata" in {
     val ddmIn = ddm(
         <ddm:profile>
-          <dc:title>Rapport 123</dc:title>
+          <dc:title>Rapport 123: blablabla</dc:title>
           { mandatoryInProfile }
         </ddm:profile>
         <ddm:dcmiMetadata>
@@ -229,7 +208,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
     )
     val expectedDdm = ddm(
         <ddm:profile>
-          <dc:title>Rapport 123</dc:title>
+          <dc:title>Rapport 123: blablabla</dc:title>
           { mandatoryInProfile }
         </ddm:profile>
         <ddm:dcmiMetadata>
@@ -242,7 +221,82 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
         </ddm:dcmiMetadata>
     )
 
-    cfg.ddmTransformer.transform(ddmIn).map(normalized) shouldBe
+    cfg.ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
+      Success(normalized(expectedDdm))
+  }
+
+  it should "add acquisition methods of profile to dcmiMetadata" in {
+    val ddmIn = ddm(
+        <ddm:profile>
+          <dc:title>Een Inventariserend Veldonderzoek in de vorm van proefsleuven</dc:title>
+          { mandatoryInProfile }
+        </ddm:profile>
+        <ddm:dcmiMetadata>
+          <dc:title>Bureauonderzoek en Inventariserend veldonderzoek (verkennende fase)</dc:title>
+        </ddm:dcmiMetadata>
+    )
+    val expectedDdm = ddm(
+        <ddm:profile>
+          <dc:title>Een Inventariserend Veldonderzoek in de vorm van proefsleuven</dc:title>
+          { mandatoryInProfile }
+        </ddm:profile>
+        <ddm:dcmiMetadata>
+              <ddm:acquisitionMethod
+                schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238"
+                valueURI={ s"https://data.cultureelerfgoed.nl/term/id/abr/a3354be9-15eb-4066-a4ec-40ed8895cb5a" }
+                subjectScheme="ABR verwervingswijzen"
+              >Een Inventariserend Veldonderzoek in de vorm van proefsleuven</ddm:acquisitionMethod>
+              <ddm:acquisitionMethod
+                schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238"
+                valueURI={ s"https://data.cultureelerfgoed.nl/term/id/abr/d4ecc89b-d52e-49a1-880a-296db5c2953e" }
+                subjectScheme="ABR verwervingswijzen"
+              >Bureauonderzoek en Inventariserend veldonderzoek (verkennende fase)</ddm:acquisitionMethod>
+              <ddm:acquisitionMethod
+                schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238"
+                valueURI={ s"https://data.cultureelerfgoed.nl/term/id/abr/bd4d913f-1cab-4f08-ab00-77b64a6273e0" }
+                subjectScheme="ABR verwervingswijzen"
+              >Bureauonderzoek en Inventariserend veldonderzoek (verkennende fase)</ddm:acquisitionMethod>
+        </ddm:dcmiMetadata>
+    )
+
+    cfg.ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
+      Success(normalized(expectedDdm))
+  }
+
+  it should "add multiple acquisition methods of profile to dcmiMetadata" in {
+    val ddmIn = ddm(
+        <ddm:profile>
+          <dc:title>Archeologisch bureauonderzoek en gecombineerd verkennend en karterend booronderzoek</dc:title>
+          { mandatoryInProfile }
+        </ddm:profile>
+        <ddm:dcmiMetadata>
+        </ddm:dcmiMetadata>
+    )
+    val expectedDdm = ddm(
+        <ddm:profile>
+          <dc:title>Archeologisch bureauonderzoek en gecombineerd verkennend en karterend booronderzoek</dc:title>
+          { mandatoryInProfile }
+        </ddm:profile>
+        <ddm:dcmiMetadata>
+              <ddm:acquisitionMethod
+                schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238"
+                valueURI={ s"https://data.cultureelerfgoed.nl/term/id/abr/d4ecc89b-d52e-49a1-880a-296db5c2953e" }
+                subjectScheme="ABR verwervingswijzen"
+              >Archeologisch bureauonderzoek en gecombineerd verkennend en karterend booronderzoek</ddm:acquisitionMethod>
+              <ddm:acquisitionMethod
+                schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238"
+                valueURI={ s"https://data.cultureelerfgoed.nl/term/id/abr/bd4d913f-1cab-4f08-ab00-77b64a6273e0" }
+                subjectScheme="ABR verwervingswijzen"
+              >Archeologisch bureauonderzoek en gecombineerd verkennend en karterend booronderzoek</ddm:acquisitionMethod>
+              <ddm:acquisitionMethod
+                schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238"
+                valueURI={ s"https://data.cultureelerfgoed.nl/term/id/abr/0bd089db-adf3-4246-8828-e64224e2324b" }
+                subjectScheme="ABR verwervingswijzen"
+              >Archeologisch bureauonderzoek en gecombineerd verkennend en karterend booronderzoek</ddm:acquisitionMethod>
+        </ddm:dcmiMetadata>
+    )
+
+    cfg.ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
       Success(normalized(expectedDdm))
   }
 
@@ -258,7 +312,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
         </ddm:dcmiMetadata>
     )
 
-    cfg.ddmTransformer.transform(ddmIn).map(normalized) shouldBe
+    cfg.ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
       Failure(InvalidBagException("rabarbera not found in ABR-period.csv; barbapappa not found in ABR-complex.csv"))
   }
 
@@ -298,7 +352,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
         </ddm:dcmiMetadata>
     )
     // TODO these titles don't show up in target/test/TitlesSpec/matches-per-rce.txt
-    cfg.ddmTransformer.transform(ddmIn).map(normalized) shouldBe
+    cfg.ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
       Success(normalized(expectedDdm))
   }
 
