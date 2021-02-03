@@ -37,8 +37,8 @@ case class DdmTransformer(cfgDir: File) extends DebugEnhancedLogging {
   private val archaeologyRuleTransformer = new RuleTransformer(
     acquisitionRewriteRule,
     reportRewriteRule,
-    AbrRewriteRule(cfgDir / "ABR-period.csv", "temporal", "ddm:temporal"),
-    AbrRewriteRule(cfgDir / "ABR-complex.csv", "subject", "ddm:subject"),
+    AbrRewriteRule(cfgDir / "ABR-period.csv", "temporal", "ddm:temporal", "ABR Periodes", "https://data.cultureelerfgoed.nl/term/id/abr/9b688754-1315-484b-9c89-8817e87c1e84"),
+    AbrRewriteRule(cfgDir / "ABR-complex.csv", "subject", "ddm:subject", "ABR Complextypen", "https://data.cultureelerfgoed.nl/term/id/abr/e9546020-4b28-4819-b0c2-29e7c864c5c0"),
     LanguageRewriteRule(cfgDir / "languages.csv"),
   )
   private val standardRuleTransformer = new RuleTransformer(
