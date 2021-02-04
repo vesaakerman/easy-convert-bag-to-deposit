@@ -75,6 +75,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
             <dcterms:temporal xsi:type="abr:ABRperiode">VMEA</dcterms:temporal>
             <dc:subject xsi:type="abr:ABRcomplex">EGVW</dc:subject>
             <dcterms:subject xsi:type="abr:ABRcomplex">ELA</dcterms:subject>
+            <ddm:subject xml:lang="nl" valueURI="http://www.rnaproject.org/data/39a61516-5ebd-43ad-9cde-98b5089c71ff" subjectScheme="Archeologisch Basis Register" schemeURI="http://www.rnaproject.org">Onbekend (XXX)</ddm:subject>
         </ddm:dcmiMetadata>
     )
 
@@ -108,19 +109,24 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers {
             <dc:title>Archeologische Berichten Nijmegen – Briefrapport 21</dc:title>
             <ddm:temporal xml:lang="nl"
                           valueURI="https://data.cultureelerfgoed.nl/term/id/abr/330e7fe0-a1f7-43de-b448-d477898f6648"
-                          subjectScheme="Archeologisch Basis Register"
-                          schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed"
+                          subjectScheme="ABR Periodes"
+                          schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/9b688754-1315-484b-9c89-8817e87c1e84"
             >Vroege Middeleeuwen A</ddm:temporal>
             <ddm:subject xml:lang="nl"
                          valueURI="https://data.cultureelerfgoed.nl/term/id/abr/6ae3ab19-49ca-44a7-8b65-3a3395014bb9"
-                         subjectScheme="Archeologisch Basis Register"
-                         schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed"
+                         subjectScheme="ABR Complextypen"
+                         schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/e9546020-4b28-4819-b0c2-29e7c864c5c0"
             >veenwinning (inclusief zouthoudend veen t.b.v. zoutproductie)</ddm:subject>
             <ddm:subject xml:lang="nl"
                          valueURI="https://data.cultureelerfgoed.nl/term/id/abr/f182d72c-2d22-47ae-b799-26dea01e770c"
-                         subjectScheme="Archeologisch Basis Register"
-                         schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed"
+                         subjectScheme="ABR Complextypen"
+                         schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/e9546020-4b28-4819-b0c2-29e7c864c5c0"
             >akker / tuin</ddm:subject>
+            <ddm:subject xml:lang="nl"
+                         valueURI="https://data.cultureelerfgoed.nl/term/id/abr/5fbda024-be3e-47ac-a6c8-1c58d2cf5ccc"
+                         subjectScheme="ABR Complextypen"
+                         schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/e9546020-4b28-4819-b0c2-29e7c864c5c0"
+            >complextype niet te bepalen</ddm:subject>
         </ddm:dcmiMetadata>
     )
 

@@ -21,16 +21,24 @@ import nl.knaw.dans.easy.bag2deposit.parseCsv
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.csv.CSVRecord
 
+import scala.util.matching.Regex
 import scala.xml.transform.RewriteRule
 import scala.xml.{ Elem, Node }
 
-case class AbrRewriteRule(cfgFile: File, oldLabel: String, newLabel: String) extends RewriteRule with DebugEnhancedLogging {
-  private val map = parse(cfgFile, newLabel)
+case class AbrRewriteRule(cfgFile: File, oldLabel: String, newLabel: String, scheme: String, schemeURI: String) extends RewriteRule with DebugEnhancedLogging {
+  private val map = parse(cfgFile, newLabel, scheme, schemeURI)
 
+  private def getAbrCode(value: String): String = {
+    val matchBetweenBrackets: Regex = raw"\((.*)\)".r
+    matchBetweenBrackets.findFirstMatchIn(value) match {
+      case Some(m) => m.group(1)
+      case None => value
+    }
+  }
   override def transform(node: Node): Seq[Node] = {
     if (!isAbr(node)) node
     else {
-      val key = node.text
+      val key = getAbrCode(node.text)
       map.getOrElse(key, <notImplemented>{ s"$key not found in ${ cfgFile.name }" }</notImplemented>)
     }
   }
@@ -38,26 +46,29 @@ case class AbrRewriteRule(cfgFile: File, oldLabel: String, newLabel: String) ext
   private def isAbr(node: Node) = {
     val attr = node.attributes
     node.label == oldLabel &&
-      attr.prefixedKey == "xsi:type" && attr.value.mkString("").startsWith("abr:ABR")
+      (
+        (attr.prefixedKey == "xsi:type" && attr.value.mkString("").startsWith("abr:ABR")) ||
+        (attr.get("valueURI").mkString("").startsWith("http://www.rnaproject.org/"))
+      )
   }
 }
 
 object AbrRewriteRule {
   val nrOfHeaderLines = 2
 
-  private def parse(file: File, label: String): Map[String, Elem] = {
+  private def parse(file: File, label: String, scheme: String, schemeURI: String): Map[String, Elem] = {
     parseCsv(file, nrOfHeaderLines)
-      .map(toXml(label))
+      .map(toXml(label, scheme, schemeURI))
       .toMap
   }
 
   private def valueUri(uuid: String) = s"https://data.cultureelerfgoed.nl/term/id/abr/$uuid"
 
-  private def toXml(label: String)(record: CSVRecord): (String, Elem) = {
+  private def toXml(label: String, scheme: String, schemeURI: String)(record: CSVRecord): (String, Elem) = {
     val xml = <label xml:lang="nl"
                            valueURI={ valueUri(record.get(2)) }
-                           subjectScheme="Archeologisch Basis Register"
-                           schemeURI={ "https://data.cultureelerfgoed.nl/term/id/abr/b6df7840-67bf-48bd-aa56-7ee39435d2ed" }
+                           subjectScheme={ scheme }
+                           schemeURI={ schemeURI }
               >{ record.get(3) }</label>
 
     (record.get(0), xml.copy(label = label))
