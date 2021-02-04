@@ -28,17 +28,17 @@ import scala.xml.{ Elem, Node }
 case class AbrRewriteRule(cfgFile: File, oldLabel: String, newLabel: String, scheme: String, schemeURI: String) extends RewriteRule with DebugEnhancedLogging {
   private val map = parse(cfgFile, newLabel, scheme, schemeURI)
 
-  private def getLabel(label: String): String = {
-    val pattern: Regex = raw"\((.*)\)".r
-    pattern.findFirstMatchIn(label) match {
+  private def getAbrCode(value: String): String = {
+    val matchBetweenBrackets: Regex = raw"\((.*)\)".r
+    matchBetweenBrackets.findFirstMatchIn(value) match {
       case Some(m) => m.group(1)
-      case None => label
+      case None => value
     }
   }
   override def transform(node: Node): Seq[Node] = {
     if (!isAbr(node)) node
     else {
-      val key = getLabel(node.text)
+      val key = getAbrCode(node.text)
       map.getOrElse(key, <notImplemented>{ s"$key not found in ${ cfgFile.name }" }</notImplemented>)
     }
   }
@@ -48,7 +48,8 @@ case class AbrRewriteRule(cfgFile: File, oldLabel: String, newLabel: String, sch
     node.label == oldLabel &&
       (
         (attr.prefixedKey == "xsi:type" && attr.value.mkString("").startsWith("abr:ABR")) ||
-        (attr.get("valueURI").mkString("").startsWith("http://www.rnaproject.org/")))
+        (attr.get("valueURI").mkString("").startsWith("http://www.rnaproject.org/"))
+      )
   }
 }
 
