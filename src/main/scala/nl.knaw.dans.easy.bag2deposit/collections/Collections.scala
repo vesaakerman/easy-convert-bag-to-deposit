@@ -24,7 +24,6 @@ import net.ruippeixotog.scalascraper.dsl.DSL.Extract._
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import nl.knaw.dans.lib.error.TryExtensions
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
-import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.commons.csv.CSVFormat.RFC4180
 import org.apache.commons.csv.{ CSVFormat, CSVParser, CSVRecord }
 import resource.managed
@@ -66,8 +65,8 @@ object Collections extends DebugEnhancedLogging {
         >{ r.get("prefLabel") }</ddm:inCollection>
   }
 
-  def getCollectionsMap(cfgPath: File, properties: PropertiesConfiguration): Map[String, Elem] = {
-    val result: Map[String, Elem] = FedoraProvider(properties)
+  def getCollectionsMap(cfgPath: File, maybeFedoraProvider: Option[FedoraProvider]): Map[String, Elem] = {
+    val result: Map[String, Elem] = maybeFedoraProvider
       .map { provider =>
         memberDatasetIdToInCollection(collectionDatasetIdToInCollection(cfgPath), provider)
       }
@@ -129,9 +128,13 @@ object Collections extends DebugEnhancedLogging {
         .map(_.attr("href"))
         .sortBy(identity)
         .distinct
+      // (?s) matches multiline values like https://github.com/DANS-KNAW/easy-convert-bag-to-deposit/blob/57e4ab9513d536c16121ad8916058d4102154138/src/test/resources/sample-jumpoff/3931-for-dataset-34359.html#L168-L169
+      // looking for links with containing eiter of
+      //   doi.org.*dans
+      //   urn:nbn:nl:ui:13-
       filtered = hrefs.filter(_.matches("(?s).*(doi.org.*dans|urn:nbn:nl:ui:13-).*"))
       ids <- filtered.traverse(toDatasetId)
-    } yield ids
+    } yield ids.filter(_.isDefined).map(_.get)
   }
 
   private def jumpoff(datasetId: String, fedoraProvider: FedoraProvider): Try[Option[String]] = {

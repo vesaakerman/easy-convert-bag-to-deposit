@@ -18,6 +18,7 @@ package nl.knaw.dans.easy.bag2deposit
 import better.files.File
 import better.files.File.root
 import nl.knaw.dans.easy.bag2deposit.collections.Collections.getCollectionsMap
+import nl.knaw.dans.easy.bag2deposit.collections.FedoraProvider
 import nl.knaw.dans.easy.bag2deposit.ddm.DdmTransformer
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.apache.commons.configuration.PropertiesConfiguration
@@ -26,7 +27,7 @@ import java.net.URI
 
 case class Configuration(version: String,
                          dansDoiPrefixes: Seq[String],
-                         dataverseIdAutority: String,
+                         dataverseIdAuthority: String,
                          bagIndex: BagIndex,
                          ddmTransformer: DdmTransformer,
                         )
@@ -51,9 +52,9 @@ object Configuration extends DebugEnhancedLogging {
     new Configuration(
       version,
       dansDoiPrefixes = properties.getStringArray("dans-doi.prefixes"),
-      dataverseIdAutority = properties.getString("dataverse.id-authority"),
+      dataverseIdAuthority = properties.getString("dataverse.id-authority"),
       bagIndex = BagIndex(new URI(properties.getString("bag-index.url"))),
-      ddmTransformer = DdmTransformer(cfgPath, getCollectionsMap(cfgPath, properties)),
+      ddmTransformer = new DdmTransformer(cfgPath, getCollectionsMap(cfgPath, FedoraProvider(properties))),
     )
   }
 }

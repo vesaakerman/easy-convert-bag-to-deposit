@@ -24,10 +24,10 @@ trait AppConfigSupport extends BagIndexSupport {
     val cfgFile = File("src/main/assembly/dist/cfg")
     new Configuration(
       version = "testVersion",
-      dansDoiPrefixes = Seq("10.17026/", "10.5072/"),
-      dataverseIdAutority = "10.80270",
+      dansDoiPrefixes = Seq("10.17026", "10.5072"),
+      dataverseIdAuthority = "10.80270",
       bagIndex = bagIndex,
-      ddmTransformer = DdmTransformer(cfgFile)
+      ddmTransformer = new DdmTransformer(cfgFile)
     )
   }
 }
