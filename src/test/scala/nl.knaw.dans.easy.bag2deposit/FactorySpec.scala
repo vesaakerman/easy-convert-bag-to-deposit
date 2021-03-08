@@ -37,7 +37,7 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
     val bagDir = File("src/test/resources/bags/01") / uuid / "bag-revision-1"
 
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bag-sequence?contains=$uuid" returning
+    (delegate.execute(_: String)) expects s"bag-sequence?contains=$uuid" returning
       new HttpResponse[String](body = "123", code = 200, Map.empty)
     val cfg = testConfig(delegatingBagIndex(delegate))
 
@@ -89,9 +89,9 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
               </ddm:DDM>
 
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bags/$baseUUID" returning
+    (delegate.execute(_: String)) expects s"bags/$baseUUID" returning
       new HttpResponse[String](body = bagIndexBody, code = 200, Map.empty)
-    (delegate.execute(_: String)) expects s"/bag-sequence?contains=$bagUUID" returning
+    (delegate.execute(_: String)) expects s"bag-sequence?contains=$bagUUID" returning
       new HttpResponse[String](body = "123", code = 200, Map.empty)
     val cfg = testConfig(delegatingBagIndex(delegate))
 
@@ -163,7 +163,7 @@ class FactorySpec extends AnyFlatSpec with Matchers with AppConfigSupport with B
               </ddm:DDM>
 
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bag-sequence?contains=$bagUUID" returning
+    (delegate.execute(_: String)) expects s"bag-sequence?contains=$bagUUID" returning
       new HttpResponse[String](body = "123", code = 200, Map.empty)
     val cfg = testConfig(delegatingBagIndex(delegate))
 
