@@ -29,11 +29,11 @@ case class BagIndexException(msg: String, cause: Throwable) extends IOException(
 case class BasePids(urn: String, doi: String)
 case class BagIndex(bagIndexUri: URI) {
 
-  def getSeqLength(uuid: UUID): Try[Int] = find(s"/bag-sequence?contains=$uuid")
+  def getSeqLength(uuid: UUID): Try[Int] = find(s"bag-sequence?contains=$uuid")
     .map(_.split("\n").map(_.trim).count(!_.isEmpty))
 
   def gePIDs(uuid: UUID): Try[BasePids] = for {
-    response <- find(s"/bags/$uuid")
+    response <- find(s"bags/$uuid")
     xml <- parse(response, uuid)
     urn = (xml \\ "urn").theSeq.headOption.map(_.text)
       .getOrElse(throw BagIndexException(s"$uuid: no URN in $response", null))

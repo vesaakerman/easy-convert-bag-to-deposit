@@ -30,7 +30,7 @@ class BagIndexSpec extends AnyFlatSpec with Matchers with BagIndexSupport {
   "getSeqLength" should "return 1" in {
     val uuid = UUID.randomUUID()
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bag-sequence?contains=$uuid" returning
+    (delegate.execute(_: String)) expects s"bag-sequence?contains=$uuid" returning
       new HttpResponse[String](body = uuid.toString, code = 200, Map.empty)
     delegatingBagIndex(delegate)
       .getSeqLength(uuid) shouldBe Success(1)
@@ -39,7 +39,7 @@ class BagIndexSpec extends AnyFlatSpec with Matchers with BagIndexSupport {
   it should "return 3" in {
     val uuid = UUID.randomUUID()
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bag-sequence?contains=$uuid" returning
+    (delegate.execute(_: String)) expects s"bag-sequence?contains=$uuid" returning
       new HttpResponse[String](body =
         s"""c01d7876-8080-4597-81fe-9083b5463cc1
            | $uuid
@@ -53,16 +53,16 @@ class BagIndexSpec extends AnyFlatSpec with Matchers with BagIndexSupport {
   "getURN" should "report not found" in {
     val uuid = UUID.randomUUID()
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bags/$uuid" returning
+    (delegate.execute(_: String)) expects s"bags/$uuid" returning
       new HttpResponse[String]("", 404, Map.empty)
     delegatingBagIndex(delegate)
-      .gePIDs(uuid) shouldBe Failure(InvalidBagException(s"/bags/$uuid returned not found in bag-index"))
+      .gePIDs(uuid) shouldBe Failure(InvalidBagException(s"bags/$uuid returned not found in bag-index"))
   }
 
   it should "return URN" in {
     val uuid = UUID.randomUUID()
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bags/$uuid" returning
+    (delegate.execute(_: String)) expects s"bags/$uuid" returning
       new HttpResponse[String](
         """<result>
           |    <bag-info>
@@ -83,7 +83,7 @@ class BagIndexSpec extends AnyFlatSpec with Matchers with BagIndexSupport {
   it should "report missing URN" in {
     val uuid = UUID.randomUUID()
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bags/$uuid" returning
+    (delegate.execute(_: String)) expects s"bags/$uuid" returning
       new HttpResponse[String]("<x/>", 200, Map.empty)
     delegatingBagIndex(delegate)
       .gePIDs(uuid) shouldBe Failure(BagIndexException(s"$uuid: no URN in <x/>", null))
@@ -92,7 +92,7 @@ class BagIndexSpec extends AnyFlatSpec with Matchers with BagIndexSupport {
   it should "report invalid XML" in {
     val uuid = UUID.randomUUID()
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bags/$uuid" returning
+    (delegate.execute(_: String)) expects s"bags/$uuid" returning
       new HttpResponse[String]("{}", 200, Map.empty)
     delegatingBagIndex(delegate)
       .gePIDs(uuid) should matchPattern {
@@ -103,20 +103,20 @@ class BagIndexSpec extends AnyFlatSpec with Matchers with BagIndexSupport {
   it should "report io problem" in {
     val uuid = UUID.randomUUID()
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bags/$uuid" throwing new IOException("mocked")
+    (delegate.execute(_: String)) expects s"bags/$uuid" throwing new IOException("mocked")
 
     delegatingBagIndex(delegate)
       .gePIDs(uuid) should matchPattern {
-      case Failure(BagIndexException(msg, _)) if msg == s"/bags/$uuid mocked" =>
+      case Failure(BagIndexException(msg, _)) if msg == s"bags/$uuid mocked" =>
     }
   }
 
   it should "report not expected response code" in {
     val uuid = UUID.randomUUID()
     val delegate = mock[MockBagIndex]
-    (delegate.execute(_: String)) expects s"/bags/$uuid" returning
+    (delegate.execute(_: String)) expects s"bags/$uuid" returning
       new HttpResponse[String]("", 300, Map.empty)
     delegatingBagIndex(delegate)
-      .gePIDs(uuid) shouldBe Failure(BagIndexException(s"Not expected response code from bag-index. /bags/$uuid, response: 300 - ", null))
+      .gePIDs(uuid) shouldBe Failure(BagIndexException(s"Not expected response code from bag-index. bags/$uuid, response: 300 - ", null))
   }
 }
