@@ -29,19 +29,23 @@ class DdmTransformer(cfgDir: File, collectionsMap: => Map[String, Elem] = Map.em
 
   val reportRewriteRule: ReportRewriteRule = ReportRewriteRule(cfgDir)
   private val acquisitionRewriteRule: AcquisitionRewriteRule = AcquisitionRewriteRule(cfgDir)
+  private val languageRewriteRule = LanguageRewriteRule(cfgDir / "languages.csv")
   private val profileTitleRuleTransformer = new RuleTransformer(
     acquisitionRewriteRule,
     reportRewriteRule,
   )
   private val archaeologyRuleTransformer = new RuleTransformer(
+    SplitNrRewriteRule,
     acquisitionRewriteRule,
     reportRewriteRule,
     AbrRewriteRule.temporalRewriteRule(cfgDir),
     AbrRewriteRule.subjectRewriteRule(cfgDir),
-    LanguageRewriteRule(cfgDir / "languages.csv"),
+    DropEmptyRewriteRule,
+    languageRewriteRule,
   )
   private val standardRuleTransformer = new RuleTransformer(
-    LanguageRewriteRule(cfgDir / "languages.csv"),
+    DropEmptyRewriteRule,
+    languageRewriteRule,
   )
 
   private case class ArchaeologyRewriteRule(additionalElements: NodeSeq) extends RewriteRule {

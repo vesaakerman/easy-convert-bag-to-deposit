@@ -60,7 +60,12 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
             <dc:subject xsi:type="abr:ABRcomplex">EGVW</dc:subject>
             <dcterms:subject xsi:type="abr:ABRcomplex">ELA</dcterms:subject>
             <ddm:subject xml:lang="nl" valueURI="http://www.rnaproject.org/data/39a61516-5ebd-43ad-9cde-98b5089c71ff" subjectScheme="Archeologisch Basis Register" schemeURI="http://www.rnaproject.org">Onbekend (XXX)</ddm:subject>
-        </ddm:dcmiMetadata>
+            <ddm:subject xml:lang="nl"
+                         valueURI="http://www.rnaproject.org/data/54f419f0-d185-4ea5-a188-57e25493a5e0"
+                         subjectScheme="Archeologisch Basis Register"
+                         schemeURI="http://www.rnaproject.org"
+            >Religie - Klooster(complex) (RKLO)</ddm:subject>
+            </ddm:dcmiMetadata>
     )
 
     val expectedDDM = ddm(title = "Rapport 123", audience = "D37000", dcmi =
@@ -98,6 +103,11 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
                          subjectScheme="ABR Complextypen"
                          schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/e9546020-4b28-4819-b0c2-29e7c864c5c0"
             >complextype niet te bepalen</ddm:subject>
+            <ddm:subject xml:lang="nl"
+                         valueURI="https://data.cultureelerfgoed.nl/term/id/abr/28e58033-875e-4f90-baa2-7b1c1c147574"
+                         subjectScheme="ABR Complextypen"
+                         schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/e9546020-4b28-4819-b0c2-29e7c864c5c0"
+            >klooster</ddm:subject>
         </ddm:dcmiMetadata>
     )
 
@@ -329,5 +339,83 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
         </ddm:dcmiMetadata>
       )))
     // content of the <inCollection> element is validated in CollectionsSpec.collectionDatasetIdToInCollection
+  }
+  it should "split archis nrs" in {
+    val ddmIn = ddm(title = "blabla", audience = "D37000", dcmi =
+        <ddm:dcmiMetadata>
+          <dct:identifier scheme="blabla">411047; 411049; 411050;  (Archis-vondstmeldingsnr.)</dct:identifier>
+          <dct:identifier>52427; 52429; 52431; 52433; 52435; 52437; 52439; 52441; 52462 (RAAP) (Archis waarneming)</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">441832; 1234</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-ZAAK-IDENTIFICATIE">567; 89</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-VONDSTMELDING">1011; 1213</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-MONUMENT">1415; 1617</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-ONDERZOEK">443456; 789; </dct:identifier>
+        </ddm:dcmiMetadata>
+    )
+    val transformer = new DdmTransformer(cfgDir, Map.empty)
+
+    transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe Success(normalized(
+      ddm(title = "blabla", audience = "D37000", dcmi =
+        <ddm:dcmiMetadata>
+          <dct:identifier xsi:type="id-type:ARCHIS-VONDSTMELDING" scheme="blabla">411047</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-VONDSTMELDING" scheme="blabla">411049</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-VONDSTMELDING" scheme="blabla">411050</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">52427</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">52429</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">52431</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">52433</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">52435</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">52437</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">52439</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">52441</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">52462</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">441832</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-WAARNEMING">1234</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-ZAAK-IDENTIFICATIE">567</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-ZAAK-IDENTIFICATIE">89</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-VONDSTMELDING">1011</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-VONDSTMELDING">1213</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-MONUMENT">1415</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-MONUMENT">1617</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-ONDERZOEK">443456</dct:identifier>
+          <dct:identifier xsi:type="id-type:ARCHIS-ONDERZOEK">789</dct:identifier>
+        </ddm:dcmiMetadata>
+      )))
+  }
+  it should "create type-id from archis description" in {
+    val transformer = new DdmTransformer(cfgDir, Map.empty)
+    val archisIds = File("src/test/resources/possibleArchaeologyIdentifiers.txt")
+      .lines
+      .filter(_.toLowerCase.contains("archis"))
+      .map(id => <dct:identifier>{id}</dct:identifier>)
+    val ddmIn = ddm(title = "blabla", audience = "D37000", dcmi =
+          <ddm:dcmiMetadata>{ archisIds }</ddm:dcmiMetadata>
+    )
+    val triedNode = transformer.transform(ddmIn, "easy-dataset:123")
+    val ddmOut = triedNode.getOrElse(fail("not expecting a conversion failure"))
+    val strings = (ddmOut \\ "identifier").map(_.text)
+    archisIds.size shouldNot be(strings.size)
+    strings.filter(_.matches(".*[^0-9].*")) shouldBe Seq("10HZ-18 (Objectcode Archis)", "36141 (ARCHIS rapportnummer)", " 405800 (Archis nummers)", "http://livelink.archis.nl/Livelink/livelink.exe?func=ll&objId=4835986&objAction=browse (URI)", "66510 (Archisnummer)", "ARCHIS2: 63389", "Onderzoeksnaam Archis: 4042 Den Haag", "Objectnummer Archis: 1121031", "Archis2 nummer 65495", "3736 (RAAP) (Archis art. 41)", "6663 (ADC) (Archis art. 41)", "2866 (RAAP) (Archis art. 41)", "7104 (ADC) (Archis art. 41)", "16065 (BeVdG) (Archis art. 41)", "Archis2: CIS-code: 25499 (Tjeppenboer) en 25500 (Hilaard)")
+  }
+  it should "drop empty relation" in {
+    val ddmIn = ddm(title = "blabla", audience = "D37000", dcmi =
+        <ddm:dcmiMetadata>
+          <dct:isFormatOf scheme="blabla"></dct:isFormatOf>
+          <ddm:isRequiredBy href="http://does.not.exist.dans.knaw.nl"></ddm:isRequiredBy>
+        </ddm:dcmiMetadata>
+    )
+    val transformer = new DdmTransformer(
+      cfgDir,
+      Map.empty,
+    )
+
+    transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
+      Success(normalized(ddm(
+        title = "blabla",
+        audience = "D37000",
+        dcmi = <ddm:dcmiMetadata>
+                 <ddm:isRequiredBy href="http://does.not.exist.dans.knaw.nl">http://does.not.exist.dans.knaw.nl</ddm:isRequiredBy>
+               </ddm:dcmiMetadata>,
+      )))
   }
 }
