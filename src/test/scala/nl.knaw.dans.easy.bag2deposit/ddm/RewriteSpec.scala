@@ -65,17 +65,11 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
                          subjectScheme="Archeologisch Basis Register"
                          schemeURI="http://www.rnaproject.org"
             >Religie - Klooster(complex) (RKLO)</ddm:subject>
-            </ddm:dcmiMetadata>
+        </ddm:dcmiMetadata>
     )
 
     val expectedDDM = ddm(title = "Rapport 123", audience = "D37000", dcmi =
         <ddm:dcmiMetadata>
-            <ddm:reportNumber
-              schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e"
-              valueURI="https://data.cultureelerfgoed.nl/term/id/abr/fcff6035-9e90-450f-8b39-cf33447e6e9f"
-              subjectScheme="ABR Rapporten"
-              reportNo="123"
-            >Rapport 123</ddm:reportNumber>
             <dc:title>blabla</dc:title>
             <ddm:reportNumber
               schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e"
@@ -108,6 +102,12 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
                          subjectScheme="ABR Complextypen"
                          schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/e9546020-4b28-4819-b0c2-29e7c864c5c0"
             >klooster</ddm:subject>
+            <ddm:reportNumber
+              schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/7a99aaba-c1e7-49a4-9dd8-d295dbcc870e"
+              valueURI="https://data.cultureelerfgoed.nl/term/id/abr/fcff6035-9e90-450f-8b39-cf33447e6e9f"
+              subjectScheme="ABR Rapporten"
+              reportNo="123"
+            >Rapport 123</ddm:reportNumber>
         </ddm:dcmiMetadata>
     )
 
@@ -252,11 +252,6 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
         <ddm:dcmiMetadata>
               <ddm:acquisitionMethod
                 schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238"
-                valueURI={ s"https://data.cultureelerfgoed.nl/term/id/abr/a3354be9-15eb-4066-a4ec-40ed8895cb5a" }
-                subjectScheme="ABR verwervingswijzen"
-              >Een Inventariserend Veldonderzoek in de vorm van proefsleuven</ddm:acquisitionMethod>
-              <ddm:acquisitionMethod
-                schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238"
                 valueURI={ s"https://data.cultureelerfgoed.nl/term/id/abr/d4ecc89b-d52e-49a1-880a-296db5c2953e" }
                 subjectScheme="ABR verwervingswijzen"
               >Bureauonderzoek en Inventariserend veldonderzoek (verkennende fase)</ddm:acquisitionMethod>
@@ -265,6 +260,11 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
                 valueURI={ s"https://data.cultureelerfgoed.nl/term/id/abr/bd4d913f-1cab-4f08-ab00-77b64a6273e0" }
                 subjectScheme="ABR verwervingswijzen"
               >Bureauonderzoek en Inventariserend veldonderzoek (verkennende fase)</ddm:acquisitionMethod>
+              <ddm:acquisitionMethod
+                schemeURI="https://data.cultureelerfgoed.nl/term/id/abr/554ca1ec-3ed8-42d3-ae4b-47bcb848b238"
+                valueURI={ s"https://data.cultureelerfgoed.nl/term/id/abr/a3354be9-15eb-4066-a4ec-40ed8895cb5a" }
+                subjectScheme="ABR verwervingswijzen"
+              >Een Inventariserend Veldonderzoek in de vorm van proefsleuven</ddm:acquisitionMethod>
         </ddm:dcmiMetadata>
     )
 
@@ -321,9 +321,32 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
     // content of the <inCollection> element is validated in CollectionsSpec.collectionDatasetIdToInCollection
   }
 
-  it should "add inCollection for other than archaeology" in pendingUntilFixed {
-    val ddmIn = ddm(title = "blabla", audience = "Z99000", dcmi =
+  it should "add inCollection to an empty dcmiMetadata for other than archaeology" in {
+    val ddmIn = ddm(title = "blabla rabarbera", audience = "Z99000", dcmi =
+        <ddm:dcmiMetadata/>
+    )
+    val transformer = new DdmTransformer(
+      cfgDir,
+      Map("easy-dataset:123" -> <inCollection>mocked</inCollection>)
+    )
+
+    transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe Success(normalized(
+      ddm(title = "blabla rabarbera", audience = "Z99000", dcmi =
         <ddm:dcmiMetadata>
+          <inCollection>mocked</inCollection>
+        </ddm:dcmiMetadata>
+      )))
+    // content of the <inCollection> element is validated in CollectionsSpec.collectionDatasetIdToInCollection
+  }
+  it should "add inCollection and filter titles" in {
+    val ddmIn = ddm(title = "blabla rabarbera", audience = "Z99000", dcmi =
+        <ddm:dcmiMetadata>
+          <dct:alternative>blabla</dct:alternative>
+          <dct:alternative>rabarbera</dct:alternative>
+          <dct:alternative>asterix</dct:alternative>
+          <dct:alternative>asterix</dct:alternative>
+          <dc:title>asterix en obelix</dc:title>
+          <dct:alternative>blabla rabarbera ratjetoe</dct:alternative>
         </ddm:dcmiMetadata>
     )
     val transformer = new DdmTransformer(
@@ -331,14 +354,14 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
       Map("easy-dataset:123" -> <inCollection>mocked</inCollection>)
     )
 
-    transformer.transform(ddmIn, "easy-dataset:456").map(normalized) shouldBe Success(normalized(ddmIn))
     transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe Success(normalized(
-      ddm(title = "blabla", audience = "Z99000", dcmi =
+      ddm(title = "blabla rabarbera", audience = "Z99000", dcmi =
         <ddm:dcmiMetadata>
+          <dc:title>asterix en obelix</dc:title>
+          <dct:alternative>blabla rabarbera ratjetoe</dct:alternative>
           <inCollection>mocked</inCollection>
         </ddm:dcmiMetadata>
       )))
-    // content of the <inCollection> element is validated in CollectionsSpec.collectionDatasetIdToInCollection
   }
   it should "split archis nrs" in {
     val ddmIn = ddm(title = "blabla", audience = "D37000", dcmi =
