@@ -18,7 +18,7 @@ package nl.knaw.dans.easy.bag2deposit.ddm
 import better.files.File
 import nl.knaw.dans.easy.bag2deposit.Fixture.{ DdmSupport, SchemaSupport }
 import nl.knaw.dans.easy.bag2deposit.ddm.LanguageRewriteRule.logNotMappedLanguages
-import nl.knaw.dans.easy.bag2deposit.{ BagIndex, Configuration, EasyConvertBagToDepositApp, InvalidBagException, normalized, parseCsv }
+import nl.knaw.dans.easy.bag2deposit.{ BagIndex, Configuration, EasyConvertBagToDepositApp, InvalidBagException, parseCsv }
 import org.apache.commons.csv.CSVRecord
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -26,6 +26,7 @@ import org.scalatest.matchers.should.Matchers
 import java.net.URI
 import java.util.UUID
 import scala.util.{ Failure, Success, Try }
+import scala.xml.{ Node, PrettyPrinter, Utility }
 
 class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmSupport {
   private val cfgDir: File = File("src/main/assembly/dist/cfg")
@@ -302,9 +303,10 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
   }
 
   "ddmTransformer" should "add inCollection for archaeology" in {
-    val ddmIn = ddm(title = "blabla", audience = "D37000", dcmi =
-        <ddm:dcmiMetadata>
-        </ddm:dcmiMetadata>
+    val profile = <dc:title>blabla</dc:title><dct:description/> +: creator +: created +: available +: archaeology +: openAccess
+    val ddmIn = ddm(
+      <ddm:profile>{ profile }</ddm:profile>
+      <ddm:dcmiMetadata/>
     )
     val transformer = new DdmTransformer(
       cfgDir,
@@ -313,17 +315,18 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
 
     transformer.transform(ddmIn, "easy-dataset:456").map(normalized) shouldBe Success(normalized(ddmIn))
     transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe Success(normalized(
-      ddm(title = "blabla", audience = "D37000", dcmi =
-        <ddm:dcmiMetadata>
-          <inCollection>mocked</inCollection>
-        </ddm:dcmiMetadata>
+      ddm(
+        <ddm:profile>{ profile }</ddm:profile>
+        <ddm:dcmiMetadata><inCollection>mocked</inCollection></ddm:dcmiMetadata>
       )))
     // content of the <inCollection> element is validated in CollectionsSpec.collectionDatasetIdToInCollection
   }
 
   it should "add inCollection to an empty dcmiMetadata for other than archaeology" in {
-    val ddmIn = ddm(title = "blabla rabarbera", audience = "Z99000", dcmi =
-        <ddm:dcmiMetadata/>
+    val profile = <dc:title>rabarbera</dc:title><dct:description/> +: creator +: created +: available +: <ddm:audience>Z99000</ddm:audience> +: openAccess
+    val ddmIn = ddm(
+      <ddm:profile>{ profile }</ddm:profile>
+      <ddm:dcmiMetadata/>
     )
     val transformer = new DdmTransformer(
       cfgDir,
@@ -331,15 +334,15 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
     )
 
     transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe Success(normalized(
-      ddm(title = "blabla rabarbera", audience = "Z99000", dcmi =
-        <ddm:dcmiMetadata>
-          <inCollection>mocked</inCollection>
-        </ddm:dcmiMetadata>
+      ddm(
+        <ddm:profile>{ profile }</ddm:profile>
+        <ddm:dcmiMetadata><inCollection>mocked</inCollection></ddm:dcmiMetadata>
       )))
-    // content of the <inCollection> element is validated in CollectionsSpec.collectionDatasetIdToInCollection
   }
   it should "add inCollection and filter titles" in {
-    val ddmIn = ddm(title = "blabla rabarbera", audience = "Z99000", dcmi =
+    val profile = <dc:title>blabla rabarbera</dc:title><dct:description/> +: creator +: created +: available +: <ddm:audience>Z99000</ddm:audience> +: openAccess
+    val ddmIn = ddm(
+        <ddm:profile>{ profile }</ddm:profile>
         <ddm:dcmiMetadata>
           <dct:alternative>blabla</dct:alternative>
           <dct:alternative>rabarbera</dct:alternative>
@@ -355,7 +358,8 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
     )
 
     transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe Success(normalized(
-      ddm(title = "blabla rabarbera", audience = "Z99000", dcmi =
+      ddm(
+        <ddm:profile>{ profile }</ddm:profile>
         <ddm:dcmiMetadata>
           <dc:title>asterix en obelix</dc:title>
           <dct:alternative>blabla rabarbera ratjetoe</dct:alternative>
@@ -441,4 +445,14 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
                </ddm:dcmiMetadata>,
       )))
   }
+
+  private val nameSpaceRegExp = """ xmlns:[a-z-]+="[^"]*"""" // these attributes have a variable order
+  private val printer = new PrettyPrinter(160, 2) // Utility.serialize would preserve white space, now tests are better readable
+
+  def normalized(elem: Node): String = printer
+    .format(Utility.trim(elem)) // this trim normalizes <a/> and <a></a>
+    .replaceAll(nameSpaceRegExp, "") // the random order would cause differences in actual and expected
+    .replaceAll(" +\n?", " ")
+    .replaceAll("\n +<", "\n<")
+    .trim
 }
