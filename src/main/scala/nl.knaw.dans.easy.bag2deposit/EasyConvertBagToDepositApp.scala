@@ -17,12 +17,12 @@ package nl.knaw.dans.easy.bag2deposit
 
 import better.files.File
 import better.files.File.CopyOptions
-import nl.knaw.dans.bag.v0.DansV0Bag
 import nl.knaw.dans.easy.bag2deposit.Command.FeedBackMessage
 import nl.knaw.dans.easy.bag2deposit.ddm.Provenance
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import java.io.{ FileNotFoundException, IOException }
+import java.nio.file.Paths
 import scala.collection.mutable.ListBuffer
 import scala.util.{ Failure, Success, Try }
 import scala.xml.{ Elem, NodeSeq }
@@ -69,11 +69,14 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
     app = getClass.getSimpleName,
     version = configuration.version
   )
+
   private def addProps(depositPropertiesFactory: DepositPropertiesFactory, maybeOutputDir: Option[File])
                       (bagParentDir: File): Try[Boolean] = {
     logger.debug(s"creating application.properties for $bagParentDir")
+    val migrationFiles = Seq("provenance.xml", "emd.xml", "dataset.xml", "files.xml")
+    val changedMetadata = Seq("bag-info.xml", "metadata/amd.xml", "metadata/dataset.xml", "metadata/provenance.xml").map(Paths.get(_))
     val bagInfoKeysToRemove = Seq(
-      DansV0Bag.EASY_USER_ACCOUNT_KEY,
+      BagFacade.EASY_USER_ACCOUNT_KEY,
       BagInfo.baseUrnKey,
       BagInfo.baseDoiKey,
     )
@@ -82,8 +85,10 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
       bag <- BagFacade.getBag(bagDir)
       mutableBagMetadata = bag.getMetadata
       bagInfo <- BagInfo(bagDir, mutableBagMetadata)
+      _ = bagInfoKeysToRemove.foreach(mutableBagMetadata.remove)
       _ = logger.info(s"$bagInfo")
-      ddmFile = bagDir / "metadata" / "dataset.xml"
+      metadata = bagDir / "metadata"
+      ddmFile = metadata / "dataset.xml"
       ddmIn <- loadXml(ddmFile)
       props <- depositPropertiesFactory.create(bagInfo, ddmIn)
       datasetId = props.getString("identifier.fedora", "")
@@ -92,11 +97,12 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
       _ = registerMatchedReports(datasetId, ddmOut \\ "reportNumber")
       _ = props.save((bagParentDir / "deposit.properties").toJava)
       _ = ddmFile.writeText(ddmOut.serialize)
-      _ = bagInfoKeysToRemove.foreach(mutableBagMetadata.remove)
-      _ = trace("updating metadata")
+      migrationDir = (bagDir / "data" / "easy-migration").createDirectories()
+      _ = migrationFiles.foreach(name => (metadata / name).copyTo(migrationDir / name))
       _ <- BagFacade.updateMetadata(bag)
-      _ = trace("updating manifest")
-      _ <- BagFacade.updateManifest(bag)
+      _ <- BagFacade.updatePayloadManifests(bag, Paths.get("data/easy-migration"))
+      _ <- BagFacade.updateTagManifests(bag, changedMetadata)
+      _ <- BagFacade.writeManifests(bag)
       _ = maybeOutputDir.foreach(move(bagParentDir))
       _ = logger.info(s"OK $datasetId ${ bagParentDir.name }/${ bagDir.name }")
     } yield true
