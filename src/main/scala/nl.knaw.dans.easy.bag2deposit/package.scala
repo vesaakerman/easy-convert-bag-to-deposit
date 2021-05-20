@@ -24,7 +24,7 @@ import org.joda.time.{ DateTime, DateTimeZone }
 import resource.managed
 
 import java.io.FileNotFoundException
-import java.nio.charset.Charset.defaultCharset
+import java.nio.charset.Charset
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Try }
 import scala.xml._
@@ -41,7 +41,7 @@ package object bag2deposit extends DebugEnhancedLogging {
 
   def parseCsv(file: File, nrOfHeaderLines: Int, format: CSVFormat = CSVFormat.RFC4180): Iterable[CSVRecord] = {
     trace(file)
-    managed(CSVParser.parse(file.toJava, defaultCharset(), format))
+    managed(CSVParser.parse(file.toJava, Charset.forName("UTF-8"), format))
       .map(_.asScala.filter(_.asScala.nonEmpty).drop(nrOfHeaderLines))
       .tried.unsafeGetOrThrow
   }

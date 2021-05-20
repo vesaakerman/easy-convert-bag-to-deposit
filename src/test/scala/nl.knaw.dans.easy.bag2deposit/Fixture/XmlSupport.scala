@@ -15,20 +15,16 @@
  */
 package nl.knaw.dans.easy.bag2deposit.Fixture
 
-import better.files.File
-import nl.knaw.dans.easy.bag2deposit.ddm.DdmTransformer
-import nl.knaw.dans.easy.bag2deposit.{ UserTransformer, BagIndex, Configuration }
+import scala.xml.{ Node, PrettyPrinter, Utility }
 
-trait AppConfigSupport extends BagIndexSupport {
-  def testConfig(bagIndex: BagIndex): Configuration = {
-    val cfgFile = File("src/main/assembly/dist/cfg")
-    new Configuration(
-      version = "testVersion",
-      dansDoiPrefixes = Seq("10.17026", "10.5072"),
-      dataverseIdAuthority = "10.80270",
-      bagIndex = bagIndex,
-      ddmTransformer = new DdmTransformer(cfgFile),
-      userTransformer = new UserTransformer(cfgFile)
-    )
-  }
+trait XmlSupport {
+  private val nameSpaceRegExp = """ xmlns:[a-z-]+="[^"]*"""" // these attributes have a variable order
+  private val printer = new PrettyPrinter(160, 2) // Utility.serialize would preserve white space, now tests are better readable
+
+  def normalized(elem: Node): String = printer
+    .format(Utility.trim(elem)) // this trim normalizes <a/> and <a></a>
+    .replaceAll(nameSpaceRegExp, "") // the random order would cause differences in actual and expected
+    .replaceAll(" +\n?", " ")
+    .replaceAll("\n +<", "\n<")
+    .trim
 }

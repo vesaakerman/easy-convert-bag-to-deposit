@@ -19,13 +19,15 @@ import better.files.File
 import better.files.File.CopyOptions
 import nl.knaw.dans.easy.bag2deposit.Command.FeedBackMessage
 import nl.knaw.dans.easy.bag2deposit.ddm.Provenance
+import nl.knaw.dans.easy.bag2deposit.ddm.Provenance.compare
 import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 
 import java.io.{ FileNotFoundException, IOException }
 import java.nio.file.Paths
+import java.nio.charset.Charset
 import scala.collection.mutable.ListBuffer
 import scala.util.{ Failure, Success, Try }
-import scala.xml.{ Elem, NodeSeq }
+import scala.xml.NodeSeq
 
 class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnhancedLogging {
 
@@ -46,6 +48,7 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
   ).toMap
 
   def registerMatchedReports(urn: String, reports: NodeSeq): Unit = {
+    trace(urn)
     reports.foreach { node =>
       val reportUuid = (node \@ "valueURI").replaceAll(".*/", "")
       Try(reportMatches(reportUuid) += s"\t$urn\t${ node.text }")
@@ -69,6 +72,7 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
     app = getClass.getSimpleName,
     version = configuration.version
   )
+  implicit val charset: Charset = Charset.forName("UTF-8")
 
   private def addProps(depositPropertiesFactory: DepositPropertiesFactory, maybeOutputDir: Option[File])
                       (bagParentDir: File): Try[Boolean] = {
@@ -93,15 +97,26 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
       props <- depositPropertiesFactory.create(bagInfo, ddmIn)
       datasetId = props.getString("identifier.fedora", "")
       ddmOut <- configuration.ddmTransformer.transform(ddmIn, datasetId)
-      _ = provenance.xml(ddmIn, ddmOut).foreach(writeProvenance(bagDir))
       _ = registerMatchedReports(datasetId, ddmOut \\ "reportNumber")
       _ = props.save((bagParentDir / "deposit.properties").toJava)
       _ = ddmFile.writeText(ddmOut.serialize)
+      oldDcmi = (ddmIn \ "dcmiMetadata").headOption.getOrElse(<dcmiMetadata/>)
+      newDcmi = (ddmOut \ "dcmiMetadata").headOption.getOrElse(<dcmiMetadata/>)
+      amdChanges <- configuration.userTransformer.transform(metadata / "amd.xml")
+      _ = provenance.collectChangesInXmls(Map(
+        "http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/" -> amdChanges,
+        "http://easy.dans.knaw.nl/schemas/md/ddm/" -> compare(oldDcmi, newDcmi),
+      )).foreach(xml => (metadata / "provenance.xml").writeText(xml.serialize))
       migrationDir = (bagDir / "data" / "easy-migration").createDirectories()
       _ = migrationFiles.foreach(name => (metadata / name).copyTo(migrationDir / name))
+      _ = bagInfoKeysToRemove.foreach(mutableBagMetadata.remove)
+      _ = trace("updating metadata")
       _ <- BagFacade.updateMetadata(bag)
+      _ = trace("updating payload manifest")
       _ <- BagFacade.updatePayloadManifests(bag, Paths.get("data/easy-migration"))
+      _ = trace("updating tag manifest")
       _ <- BagFacade.updateTagManifests(bag, changedMetadata)
+      _ = trace("writing manifests")
       _ <- BagFacade.writeManifests(bag)
       _ = maybeOutputDir.foreach(move(bagParentDir))
       _ = logger.info(s"OK $datasetId ${ bagParentDir.name }/${ bagDir.name }")
@@ -116,11 +131,6 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
     case e: Throwable =>
       logger.error(s"${ bagParentDir.name } failed with not expected error: ${ e.getClass.getSimpleName } ${ e.getMessage }")
       Failure(e)
-  }
-
-  private def writeProvenance(bagDir: File)(xml: Elem) = {
-    trace(bagDir)
-    (bagDir / "metadata" / "provenance.xml").writeText(xml.serialize)
   }
 
   private def move(bagParentDir: File)(outputDir: File) = {

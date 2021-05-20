@@ -15,23 +15,26 @@
  */
 package nl.knaw.dans.easy.bag2deposit.ddm
 
+import nl.knaw.dans.lib.logging.DebugEnhancedLogging
 import org.joda.time.DateTime.now
 import org.joda.time.format.DateTimeFormat
 
 import scala.xml.{ Elem, Node }
 
-class Provenance(app: String, version: String) {
+class Provenance(app: String, version: String) extends DebugEnhancedLogging {
   private val dateFormat = now().toString(DateTimeFormat.forPattern("yyyy-MM-dd"))
 
-  def xml(oldDdm: Node, newDdm: Node): Option[Elem] = {
-
-    // children of both profile and dcmiMetadata
-    val oldNodes = oldDdm.flatMap(_.nonEmptyChildren).flatMap(_.nonEmptyChildren)
-    val newNodes = newDdm.flatMap(_.nonEmptyChildren).flatMap(_.nonEmptyChildren)
-    val onlyInOld = oldNodes.diff(newNodes)
-    val onlyInNew = newNodes.diff(oldNodes)
-
-    if (onlyInOld.isEmpty && onlyInNew.isEmpty) None
+  /**
+   * collects differences between old and new versions of XMLs as far as they we
+   *
+   * @param changes the key of the map is the schema of the compared XMLs
+   *                the values are an empty list or the content for <prov:migration>
+   * @return
+   */
+  def collectChangesInXmls(changes: Map[String, Seq[Node]]): Option[Elem] = {
+    trace(this.getClass)
+    val filtered = changes.filter(_._2.nonEmpty)
+    if (filtered.isEmpty) None
     else Some(
       <prov:provenance xmlns:ddm="http://easy.dans.knaw.nl/schemas/md/ddm/"
         xmlns:prov="http://easy.dans.knaw.nl/schemas/bag/metadata/prov/"
@@ -44,14 +47,32 @@ class Provenance(app: String, version: String) {
         http://easy.dans.knaw.nl/schemas/bag/metadata/prov/ https://easy.dans.knaw.nl/schemas/bag/metadata/prov/provenance.xsd
         ">
         <prov:migration app={ app } version={ version } date={ now().toString(dateFormat) }>
-            <prov:old>
-              { onlyInOld }
-            </prov:old>
-            <prov:new>
-            { onlyInNew }
-            </prov:new>
+        { filtered.map { case (scheme, diff) =>
+          <prov:file scheme={ scheme }>{ diff }</prov:file>
+        }}
         </prov:migration>
       </prov:provenance>
     )
+  }
+}
+object Provenance {
+  /**
+   * Creates the content for a <prov:migration> by comparing the direct child elements of each XML.
+   * @param oldXml the original instance
+   * @param newXml the modified instance
+   * @return and empty list if both versions have the same children
+   *         when large/complex elements (like for example authors or polygons) have minor changes
+   *         both versions of the complete element is returned
+   */
+  def compare(oldXml: Node, newXml: Node): Seq[Node] = {
+    // TODO poor mans solution to call with ddm/dcmiMetadata respective root of amd
+    val oldNodes = oldXml.flatMap(_.nonEmptyChildren)
+    val newNodes = newXml.flatMap(_.nonEmptyChildren)
+    val onlyInOld = oldNodes.diff(newNodes)
+    val onlyInNew = newNodes.diff(oldNodes)
+
+    if (onlyInOld.isEmpty && onlyInNew.isEmpty) Seq.empty
+    else <prov:old>{ onlyInOld }</prov:old>
+         <prov:new>{ onlyInNew }</prov:new>
   }
 }

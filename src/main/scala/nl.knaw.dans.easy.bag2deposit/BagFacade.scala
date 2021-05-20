@@ -46,8 +46,11 @@ object BagFacade {
     case cause: Exception => Failure(InvalidBagException(s"$bagDir, $cause"))
   }
 
-  def updateMetadata(bag: Bag): Try[Unit] = Try {
-    MetadataWriter.writeBagMetadata(bag.getMetadata, bag.getVersion, bag.getRootDir, bag.getFileEncoding)
+  def updateMetadata(bag: Bag): Try[Unit] = {
+    trace(bag.getRootDir)
+    Try {
+      MetadataWriter.writeBagMetadata(bag.getMetadata, bag.getVersion, bag.getRootDir, bag.getFileEncoding)
+    }
   }
 
   private val includeHiddenFiles = true
@@ -60,6 +63,7 @@ object BagFacade {
    * @return
    */
   def updatePayloadManifests(bag: Bag, payloadEntries: Path): Try[Unit] = Try {
+    trace(bag.getRootDir)
     if (!payloadEntries.toString.startsWith("data/")) {
       throw new IllegalArgumentException(s"path must start with data, found $payloadEntries")
     }

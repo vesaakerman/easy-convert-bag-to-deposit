@@ -15,17 +15,16 @@
  */
 package nl.knaw.dans.easy.bag2deposit
 
-import java.io.ByteArrayOutputStream
-
 import better.files.File
 import nl.knaw.dans.easy.bag2deposit.Fixture.{ CustomMatchers, FixedCurrentDateTimeSupport }
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
+import java.io.ByteArrayOutputStream
+
 class ReadmeSpec extends AnyFlatSpec with Matchers with CustomMatchers with FixedCurrentDateTimeSupport {
 
-  private val configuration = Configuration(version = "my-version", Seq.empty, null, null, null)
-  private val clo = new CommandLineOptions(Array[String](), configuration) {
+  private val clo = new CommandLineOptions(Array[String](), "my-version") {
     // avoids System.exit() in case of invalid arguments or "--help"
     override def verify(): Unit = {}
   }

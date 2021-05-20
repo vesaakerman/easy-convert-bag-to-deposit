@@ -16,9 +16,9 @@
 package nl.knaw.dans.easy.bag2deposit.ddm
 
 import better.files.File
-import nl.knaw.dans.easy.bag2deposit.Fixture.{ DdmSupport, SchemaSupport }
+import nl.knaw.dans.easy.bag2deposit.Fixture.{ DdmSupport, SchemaSupport, XmlSupport }
 import nl.knaw.dans.easy.bag2deposit.ddm.LanguageRewriteRule.logNotMappedLanguages
-import nl.knaw.dans.easy.bag2deposit.{ BagIndex, Configuration, EasyConvertBagToDepositApp, InvalidBagException, parseCsv }
+import nl.knaw.dans.easy.bag2deposit.{ UserTransformer, BagIndex, Configuration, EasyConvertBagToDepositApp, InvalidBagException, parseCsv }
 import org.apache.commons.csv.CSVRecord
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -27,11 +27,10 @@ import java.net.URI
 import java.nio.charset.Charset
 import java.util.UUID
 import scala.util.{ Failure, Success, Try }
-import scala.xml.{ Node, PrettyPrinter, Utility }
 
-class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmSupport {
+class RewriteSpec extends AnyFlatSpec with XmlSupport with SchemaSupport with Matchers with DdmSupport {
   private val cfgDir: File = File("src/main/assembly/dist/cfg")
-  private val transformer: DdmTransformer = new DdmTransformer(cfgDir, Map.empty)
+  private val ddmTransformer: DdmTransformer = new DdmTransformer(cfgDir, Map.empty)
 
   override val schema = "https://easy.dans.knaw.nl/schemas/md/ddm/ddm.xsd"
 
@@ -119,12 +118,13 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
       dansDoiPrefixes = "10.17026/,10.5072/".split(","),
       dataverseIdAuthority = "10.80270",
       bagIndex = BagIndex(new URI("http://localhost:20120/")),
-      ddmTransformer = transformer,
+      ddmTransformer = ddmTransformer,
+      userTransformer = new UserTransformer(cfgDir)
     ))
 
     // a few steps of EasyConvertBagToDepositApp.addPropsToBags
     val datasetId = "easy-dataset:123"
-    transformer.transform(ddmIn, datasetId).map(normalized)
+    ddmTransformer.transform(ddmIn, datasetId).map(normalized)
       .getOrElse(fail("no DDM returned")) shouldBe normalized(expectedDDM)
     app.registerMatchedReports(datasetId, expectedDDM \\ "reportNumber")
     app.logMatchedReports() // once for all datasets
@@ -141,7 +141,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
         </ddm:dcmiMetadata>
     )
 
-    transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
+    ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
       Failure(InvalidBagException("temporal rabarbera not found; subject barbapappa not found"))
   }
 
@@ -174,7 +174,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
         </ddm:dcmiMetadata>
     )
     val datasetId = "eas-dataset:123"
-    transformer.transform(ddmIn, datasetId).map(normalized)
+    ddmTransformer.transform(ddmIn, datasetId).map(normalized)
       .getOrElse(fail("no DDM returned")) shouldBe normalized(expectedDDM)
 
     // TODO manually check logging of not mapped language fields
@@ -195,7 +195,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
         </ddm:dcmiMetadata>
     )
 
-    transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe Success(normalized(ddmExpected))
+    ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe Success(normalized(ddmExpected))
     // TODO manually check logging of briefrapport
   }
 
@@ -216,7 +216,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
         </ddm:dcmiMetadata>
     )
 
-    transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
+    ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
       Success(normalized(expectedDdm))
   }
 
@@ -249,7 +249,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
         </ddm:dcmiMetadata>
     )
     // TODO these titles don't show up in target/test/TitlesSpec/matches-per-rce.txt
-    transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
+    ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
       Success(normalized(expectedDdm))
   }
 
@@ -280,7 +280,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
         </ddm:dcmiMetadata>
     )
 
-    transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
+    ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
       Success(normalized(expectedDdm))
   }
 
@@ -310,7 +310,7 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
         </ddm:dcmiMetadata>
     )
 
-    transformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
+    ddmTransformer.transform(ddmIn, "easy-dataset:123").map(normalized) shouldBe
       Success(normalized(expectedDdm))
   }
 
@@ -519,14 +519,4 @@ class RewriteSpec extends AnyFlatSpec with SchemaSupport with Matchers with DdmS
                </ddm:dcmiMetadata>,
       )))
   }
-
-  private val nameSpaceRegExp = """ xmlns:[a-z-]+="[^"]*"""" // these attributes have a variable order
-  private val printer = new PrettyPrinter(160, 2) // Utility.serialize would preserve white space, now tests are better readable
-
-  def normalized(elem: Node): String = printer
-    .format(Utility.trim(elem)) // this trim normalizes <a/> and <a></a>
-    .replaceAll(nameSpaceRegExp, "") // the random order would cause differences in actual and expected
-    .replaceAll(" +\n?", " ")
-    .replaceAll("\n +<", "\n<")
-    .trim
 }
