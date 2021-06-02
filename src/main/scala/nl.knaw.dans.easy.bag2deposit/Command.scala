@@ -40,6 +40,7 @@ object Command extends App with DebugEnhancedLogging {
       load((cfgPath / "application.properties").toJava)
     }
   }
+  val fedoraProvider = FedoraProvider(properties)
   val version = (home / "bin" / "version").contentAsString.stripLineEnd
   val agent = properties.getString("http.agent", s"easy-convert-bag-to-deposit/$version")
   logger.info(s"setting http.agent to $agent")
@@ -58,8 +59,9 @@ object Command extends App with DebugEnhancedLogging {
     dansDoiPrefixes = properties.getStringArray("dans-doi.prefixes"),
     dataverseIdAuthority = properties.getString("dataverse.id-authority"),
     bagIndex = BagIndex(new URI(properties.getString("bag-index.url"))),
-    ddmTransformer = new DdmTransformer(cfgPath, getCollectionsMap(cfgPath, FedoraProvider(properties))),
-    userTransformer = new UserTransformer(cfgPath)
+    ddmTransformer = new DdmTransformer(cfgPath, getCollectionsMap(cfgPath, fedoraProvider)),
+    userTransformer = new UserTransformer(cfgPath),
+    fedoraProvider = fedoraProvider
   )
   private val propertiesFactory = DepositPropertiesFactory(
     configuration,

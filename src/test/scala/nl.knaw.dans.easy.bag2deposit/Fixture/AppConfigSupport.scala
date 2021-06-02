@@ -28,7 +28,8 @@ trait AppConfigSupport extends BagIndexSupport {
       dataverseIdAuthority = "10.80270",
       bagIndex = bagIndex,
       ddmTransformer = new DdmTransformer(cfgFile),
-      userTransformer = new UserTransformer(cfgFile)
+      userTransformer = new UserTransformer(cfgFile),
+      fedoraProvider = None
     )
   }
 }
