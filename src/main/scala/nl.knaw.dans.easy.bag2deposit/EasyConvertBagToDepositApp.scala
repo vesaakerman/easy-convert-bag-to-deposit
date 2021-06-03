@@ -27,9 +27,11 @@ import java.nio.file.Paths
 import java.nio.charset.Charset
 import scala.collection.mutable.ListBuffer
 import scala.util.{ Failure, Success, Try }
-import scala.xml.NodeSeq
+import scala.xml.{ NodeSeq, PrettyPrinter, XML }
 
 class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnhancedLogging {
+
+  private val printer = new PrettyPrinter(160, 2)
 
   def addPropsToBags(bagParentDirs: Iterator[File],
                      maybeOutputDir: Option[File],
@@ -92,6 +94,7 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
       _ = bagInfoKeysToRemove.foreach(mutableBagMetadata.remove)
       _ = logger.info(s"$bagInfo")
       metadata = bagDir / "metadata"
+      filesXmlFile = (metadata /"files.xml").toString()
       ddmFile = metadata / "dataset.xml"
       ddmIn <- loadXml(ddmFile)
       props <- depositPropertiesFactory.create(bagInfo, ddmIn)
@@ -109,6 +112,7 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
       )).foreach(xml => (metadata / "provenance.xml").writeText(xml.serialize))
       migrationDir = (bagDir / "data" / "easy-migration").createDirectories()
       _ = migrationFiles.foreach(name => (metadata / name).copyTo(migrationDir / name))
+      _ = addToXmlFile(filesXmlFile, migrationFiles)
       _ = bagInfoKeysToRemove.foreach(mutableBagMetadata.remove)
       _ = trace("updating metadata")
       _ <- BagFacade.updateMetadata(bag)
@@ -131,6 +135,13 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
     case e: Throwable =>
       logger.error(s"${ bagParentDir.name } failed with not expected error: ${ e.getClass.getSimpleName } ${ e.getMessage }")
       Failure(e)
+  }
+
+  private def addToXmlFile(filesXmlFile: String, filesToAdd: Seq[String]): Try[File] = Try {
+    val oldFilesXml = XML.loadFile(filesXmlFile)
+    val newFilesXml = FilesXml(oldFilesXml, "data/easy-migration", filesToAdd, "text/xml")
+    File(filesXmlFile).delete()
+    File(filesXmlFile).writeText(printer.format(newFilesXml))
   }
 
   private def move(bagParentDir: File)(outputDir: File) = {
