@@ -92,6 +92,7 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
       _ = bagInfoKeysToRemove.foreach(mutableBagMetadata.remove)
       _ = logger.info(s"$bagInfo")
       metadata = bagDir / "metadata"
+      migration = bagDir / "data" / "easy-migration"
       ddmFile = metadata / "dataset.xml"
       ddmIn <- loadXml(ddmFile)
       props <- depositPropertiesFactory.create(bagInfo, ddmIn)
@@ -109,9 +110,7 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
         "http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/" -> amdChanges,
         "http://easy.dans.knaw.nl/schemas/md/ddm/" -> compare(oldDcmi, newDcmi),
       )).foreach(xml => (metadata / "provenance.xml").writeText(xml.serialize))
-      migrationFiles = if (fromVault) Seq("provenance.xml", "amd.xml", "dataset.xml", "files.xml") else Seq("provenance.xml", "emd.xml", "dataset.xml", "files.xml")
-      migrationDir = (bagDir / "data" / "easy-migration").createDirectories()
-      _ = migrationFiles.foreach(name => (metadata / name).copyTo(migrationDir / name))
+      _ = copyMigrationFiles(metadata, migration, fromVault)
       _ = bagInfoKeysToRemove.foreach(mutableBagMetadata.remove)
       _ = trace("updating metadata")
       _ <- BagFacade.updateMetadata(bag)
@@ -147,6 +146,12 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
     }.getOrElse {
       logger.warn(s"No amd.xml added, no fedora was configured")
     }
+  }
+
+  private def copyMigrationFiles(metadata: File, migration: File, fromVault: Boolean): Try[Unit] = Try {
+    val migrationFiles = if (fromVault) Seq("provenance.xml", "amd.xml", "dataset.xml", "files.xml") else Seq("provenance.xml", "emd.xml", "dataset.xml", "files.xml")
+    val migrationDir = migration.createDirectories()
+    migrationFiles.foreach(name => (metadata / name).copyTo(migrationDir / name))
   }
 
   private def move(bagParentDir: File)(outputDir: File) = {

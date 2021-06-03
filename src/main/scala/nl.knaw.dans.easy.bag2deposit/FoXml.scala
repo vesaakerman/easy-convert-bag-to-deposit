@@ -19,6 +19,7 @@ import scala.util.Try
 import scala.xml.Node
 
 object FoXml {
+  // dressed down copy of https://github.com/DANS-KNAW/easy-fedora-to-bag
 
   private def getStream(streamId: String, rootTag: String, foXml: Node): Try[Node] = Try {
     val node = getStreamRoot(streamId, foXml)

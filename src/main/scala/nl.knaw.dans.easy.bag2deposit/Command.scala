@@ -40,7 +40,6 @@ object Command extends App with DebugEnhancedLogging {
       load((cfgPath / "application.properties").toJava)
     }
   }
-  val fedoraProvider = FedoraProvider(properties)
   val version = (home / "bin" / "version").contentAsString.stripLineEnd
   val agent = properties.getString("http.agent", s"easy-convert-bag-to-deposit/$version")
   logger.info(s"setting http.agent to $agent")
@@ -52,6 +51,7 @@ object Command extends App with DebugEnhancedLogging {
   private val bagParentDirs = commandLine.bagParentDir.map(Iterator(_))
     .getOrElse(commandLine.bagGrandParentDir.map(_.children)
       .getOrElse(Iterator.empty))
+  val fedoraProvider = FedoraProvider(properties)
 
 
   val configuration = Configuration(

@@ -120,7 +120,7 @@ class RewriteSpec extends AnyFlatSpec with XmlSupport with SchemaSupport with Ma
       bagIndex = BagIndex(new URI("http://localhost:20120/")),
       ddmTransformer = ddmTransformer,
       userTransformer = new UserTransformer(cfgDir),
-      fedoraProvider = None
+      fedoraProvider = None,
     ))
 
     // a few steps of EasyConvertBagToDepositApp.addPropsToBags

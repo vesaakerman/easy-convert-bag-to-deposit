@@ -29,7 +29,7 @@ trait AppConfigSupport extends BagIndexSupport {
       bagIndex = bagIndex,
       ddmTransformer = new DdmTransformer(cfgFile),
       userTransformer = new UserTransformer(cfgFile),
-      fedoraProvider = None
+      fedoraProvider = None,
     )
   }
 }
