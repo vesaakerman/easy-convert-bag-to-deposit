@@ -18,7 +18,7 @@ package nl.knaw.dans.easy.bag2deposit
 import scala.util.Try
 import scala.xml.Node
 
-object FoXml {
+class FoXml {
   // dressed down copy of https://github.com/DANS-KNAW/easy-fedora-to-bag
 
   private def getStream(streamId: String, rootTag: String, foXml: Node): Try[Node] = Try {
@@ -45,4 +45,7 @@ object FoXml {
   private def hasControlGroup(controlGroup: String)(streamRoot: Node): Boolean = {
     streamRoot.attribute("CONTROL_GROUP").map(_.text).contains(controlGroup)
   }
+}
+
+object FoXml extends FoXml {
 }
