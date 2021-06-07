@@ -19,7 +19,6 @@ import better.files.File
 import nl.knaw.dans.easy.bag2deposit.BagSource._
 import nl.knaw.dans.easy.bag2deposit.Fixture.{AppConfigSupport, FileSystemSupport, XmlSupport}
 import nl.knaw.dans.easy.bag2deposit.IdType._
-import org.scalatest.OneInstancePerTest
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import scalaj.http.HttpResponse
@@ -27,22 +26,22 @@ import scalaj.http.HttpResponse
 import scala.util.{Success, Try}
 import scala.xml.XML
 
-class AppSpec extends AnyFlatSpec with XmlSupport with Matchers with AppConfigSupport with FileSystemSupport with OneInstancePerTest {
+class AppSpec extends AnyFlatSpec with XmlSupport with Matchers with AppConfigSupport with FileSystemSupport {
   private val resourceBags: File = File("src/test/resources/bags/01")
   private val resourceBags_2: File = File("src/test/resources/bags/02")
   private val validUUID = "04e638eb-3af1-44fb-985d-36af12fccb2d"
 
-  val delegate = mock[MockBagIndex]
-  val noBaseBagUUID = "87151a3a-12ed-426a-94f2-97313c7ae1f2"
-  (delegate.execute(_: String)) expects s"bag-sequence?contains=$validUUID" returning
-    new HttpResponse[String]("123", 200, Map.empty)
-  (delegate.execute(_: String)) expects s"bag-sequence?contains=$noBaseBagUUID" returning
-    new HttpResponse[String]("123", 200, Map.empty)
-  (delegate.execute(_: String)) expects s"bags/4722d09d-e431-4899-904c-0733cd773034" returning
-    new HttpResponse[String]("<result><bag-info><urn>urn:nbn:nl:ui:13-z4-f8cm</urn><doi>10.5072/dans-2xg-umq8</doi></bag-info></result>", 200, Map.empty)
-  val appConfig = testConfig(delegatingBagIndex(delegate), null)
-
   "addPropsToBags" should "move valid exports" in {
+    val delegate = mock[MockBagIndex]
+    val noBaseBagUUID = "87151a3a-12ed-426a-94f2-97313c7ae1f2"
+    (delegate.execute(_: String)) expects s"bag-sequence?contains=$validUUID" returning
+      new HttpResponse[String]("123", 200, Map.empty)
+    (delegate.execute(_: String)) expects s"bag-sequence?contains=$noBaseBagUUID" returning
+      new HttpResponse[String]("123", 200, Map.empty)
+    (delegate.execute(_: String)) expects s"bags/4722d09d-e431-4899-904c-0733cd773034" returning
+      new HttpResponse[String]("<result><bag-info><urn>urn:nbn:nl:ui:13-z4-f8cm</urn><doi>10.5072/dans-2xg-umq8</doi></bag-info></result>", 200, Map.empty)
+    val appConfig = testConfig(delegatingBagIndex(delegate), null)
+
     (resourceBags.children.toArray).foreach { testBag =>
       testBag.copyTo(
         (testDir / "exports" / testBag.name).createDirectories()
@@ -109,6 +108,10 @@ class AppSpec extends AnyFlatSpec with XmlSupport with Matchers with AppConfigSu
   }
 
   it should "load amd.xml from Fedora and write it into data/easy-migration when source is VAULT and Fedora provided" in {
+    val delegate = mock[MockBagIndex]
+    (delegate.execute(_: String)) expects s"bag-sequence?contains=$validUUID" returning
+      new HttpResponse[String]("123", 200, Map.empty)
+
     val loadFoXmlResult =
       <foxml:digitalObject xsi:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd" PID="easy-dataset:17" VERSION="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:foxml="info:fedora/fedora-system:def/foxml#">
         <foxml:datastream VERSIONABLE="false" CONTROL_GROUP="X" STATE="A" ID="AMD">
