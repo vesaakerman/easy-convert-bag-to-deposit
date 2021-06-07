@@ -28,25 +28,25 @@ object FilesXml extends DebugEnhancedLogging {
   def apply(filesXml: Elem, destination: String, addedFiles: Seq[String], mimeType: String): Node = {
 
     val formatTagPrefix = Option(filesXml.scope.getPrefix(DEFAULT_URI)).getOrElse(DEFAULT_PREFIX)
-    val filesXmlWithPossiblyAddedNamespace  = Option(filesXml.scope.getURI(formatTagPrefix))
+    val filesXmlWithPossiblyAddedNamespace = Option(filesXml.scope.getURI(formatTagPrefix))
       .map(_ => filesXml)
       .getOrElse(filesXml.copy(scope = NamespaceBinding(formatTagPrefix, DEFAULT_URI, filesXml.scope)))
-    val newFileElements = addedFiles.foldLeft(NodeSeq.Empty)((a,b) => a ++
+    val newFileElements = addedFiles.foldLeft(NodeSeq.Empty)((a, b) => a ++
       XML.loadString(
-      s"""<file filepath="$destination/$b">
+        s"""<file filepath="$destination/$b">
            <$formatTagPrefix:format>$mimeType</$formatTagPrefix:format>
         </file>"""))
 
     object insertElements extends RewriteRule {
       override def transform(node: Node): Seq[Node] = node match {
-        case Elem(boundPrefix, "files", _, boundScope, children @ _*) =>
+        case Elem(boundPrefix, "files", _, boundScope, children@_*) =>
           <files>
-            { children }
-            { newFileElements }
+            {children}
+            {newFileElements}
           </files>.copy(prefix = boundPrefix, scope = boundScope)
         case other => other
       }
     }
-      new RuleTransformer(insertElements).transform(filesXmlWithPossiblyAddedNamespace).head
-    }
+    new RuleTransformer(insertElements).transform(filesXmlWithPossiblyAddedNamespace).head
+  }
 }

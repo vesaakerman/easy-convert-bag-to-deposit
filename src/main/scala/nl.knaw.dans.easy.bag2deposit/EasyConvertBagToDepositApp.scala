@@ -141,6 +141,10 @@ class EasyConvertBagToDepositApp(configuration: Configuration) extends DebugEnha
     val oldFilesXml = XML.loadFile(filesXmlFile)
     val newFilesXml = FilesXml(oldFilesXml, "data/easy-migration", filesToAdd, "text/xml")
     File(filesXmlFile).delete()
+    // Notice: here we use PrettyPrinter to format the xml-file, to get all the new elements line up neatly.
+    // However, generally we discourage its usage because PrettyPrinter removes white spaces and this may cause
+    // problems, for instance in EMD.xml and DDM.xml.  Usage of 'serialize' is encouraged
+    // (https://github.com/DANS-KNAW/easy-convert-bag-to-deposit/blob/23f0eb93dbc2cfa9cddd78904a0c5b9a1f63eede/src/main/scala/nl.knaw.dans.easy.bag2deposit/package.scala#L69-L72)
     File(filesXmlFile).writeText(printer.format(newFilesXml))
   }
 
