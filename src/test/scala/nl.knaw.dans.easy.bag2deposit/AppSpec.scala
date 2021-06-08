@@ -17,16 +17,19 @@ package nl.knaw.dans.easy.bag2deposit
 
 import better.files.File
 import nl.knaw.dans.easy.bag2deposit.BagSource._
-import nl.knaw.dans.easy.bag2deposit.Fixture.{ AppConfigSupport, FileSystemSupport }
+import nl.knaw.dans.easy.bag2deposit.Fixture.{AppConfigSupport, FileSystemSupport, XmlSupport}
 import nl.knaw.dans.easy.bag2deposit.IdType._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import scalaj.http.HttpResponse
 
 import scala.util.Success
+import scala.xml.XML
 
-class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileSystemSupport {
-  private val resourceBags: File = File("src/test/resources/bags/01")
+class AppSpec extends AnyFlatSpec with XmlSupport with Matchers with AppConfigSupport with FileSystemSupport {
+  private val resourceBags_1: File = File("src/test/resources/bags/01")
+  private val resourceBags_2: File = File("src/test/resources/bags/02")
+  private val resourceBags_3: File = File("src/test/resources/bags/03")
   private val validUUID = "04e638eb-3af1-44fb-985d-36af12fccb2d"
 
   "addPropsToBags" should "move valid exports" in {
@@ -40,7 +43,7 @@ class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileS
       new HttpResponse[String]("<result><bag-info><urn>urn:nbn:nl:ui:13-z4-f8cm</urn><doi>10.5072/dans-2xg-umq8</doi></bag-info></result>", 200, Map.empty)
     val appConfig = testConfig(delegatingBagIndex(delegate))
 
-    (resourceBags.children.toArray).foreach { testBag =>
+    (resourceBags_1.children.toArray).foreach { testBag =>
       testBag.copyTo(
         (testDir / "exports" / testBag.name).createDirectories()
       )
@@ -63,11 +66,11 @@ class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileS
     val leftDirs = (testDir / "exports").children.toList
 
     // only moved dirs changed
-    leftDirs.foreach(dir => dir.isSameContentAs(resourceBags / dir.name) shouldBe true)
-    movedDirs.foreach(dir => dir.isSameContentAs(resourceBags / dir.name) shouldBe false)
+    leftDirs.foreach(dir => dir.isSameContentAs(resourceBags_1 / dir.name) shouldBe true)
+    movedDirs.foreach(dir => dir.isSameContentAs(resourceBags_1 / dir.name) shouldBe false)
 
     // total number of deposits should not change
-    movedDirs.size + leftDirs.size shouldBe resourceBags.children.toList.size
+    movedDirs.size + leftDirs.size shouldBe resourceBags_1.children.toList.size
 
     movedDirs.size shouldBe 2 // base-bag-not-found is moved together with the valid bag-revision-1
     // TODO should addPropsToBags check existence of base-bag in case of versioned bags?
@@ -75,7 +78,7 @@ class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileS
 
     //////// changes made to the valid bag
 
-    val validBag = resourceBags / validUUID / "bag-revision-1"
+    val validBag = resourceBags_1 / validUUID / "bag-revision-1"
     val movedBag = testDir / "ingest-dir" / validUUID / "bag-revision-1"
 
     // DDM should have preserved its white space
@@ -103,5 +106,89 @@ class AppSpec extends AnyFlatSpec with Matchers with AppConfigSupport with FileS
     (validBag / "metadata" / "amd.xml").contentAsString should include("<depositorId>user001</depositorId>")
     (movedBag / "metadata" / "amd.xml").contentAsString should
       (include("<depositorId>USer</depositorId>") and not include "<depositorId>user001</depositorId>")
+  }
+
+  it should "add the files written into data/easy-migration into metadata/files.xml" in {
+    val delegate = mock[MockBagIndex]
+    (delegate.execute(_: String)) expects s"bag-sequence?contains=$validUUID" returning
+      new HttpResponse[String]("123", 200, Map.empty)
+    val appConfig = testConfig(delegatingBagIndex(delegate))
+    val filesXmlWithMigrationFiles=
+        <files xmlns:dcterms="http://purl.org/dc/terms/" xmlns="http://easy.dans.knaw.nl/schemas/bag/metadata/files/">
+
+          <file filepath="data/leeg.txt">
+            <dcterms:format>text/xml</dcterms:format>
+          </file>
+          <file filepath="data/easy-migration/provenance.xml">
+            <dcterms:format>text/xml</dcterms:format>
+          </file>
+          <file filepath="data/easy-migration/emd.xml">
+            <dcterms:format>text/xml</dcterms:format>
+          </file>
+          <file filepath="data/easy-migration/dataset.xml">
+            <dcterms:format>text/xml</dcterms:format>
+          </file>
+          <file filepath="data/easy-migration/files.xml">
+            <dcterms:format>text/xml</dcterms:format>
+          </file>
+        </files>
+
+    (resourceBags_2.children.toArray).foreach { testBag =>
+      testBag.copyTo(
+        (testDir / "exports" / testBag.name).createDirectories()
+      )
+    }
+
+    new EasyConvertBagToDepositApp(appConfig).addPropsToBags(
+      (testDir / "exports").children,
+      maybeOutputDir = Some((testDir / "ingest-dir").createDirectories()),
+      DepositPropertiesFactory(appConfig, DOI, VAULT)
+    ) shouldBe Success("No fatal errors")
+
+    val movedBag = testDir / "ingest-dir" / validUUID / "bag-revision-1"
+    val filesXml = movedBag / "metadata" / "files.xml"
+    normalized(XML.loadFile(filesXml.toJava)) shouldBe(normalized(filesXmlWithMigrationFiles))
+  }
+
+  it should "prefix the new elements in metadata/files.xml with 'dc:'" in {
+    val delegate = mock[MockBagIndex]
+    (delegate.execute(_: String)) expects s"bag-sequence?contains=$validUUID" returning
+      new HttpResponse[String]("123", 200, Map.empty)
+    val appConfig = testConfig(delegatingBagIndex(delegate))
+    val filesXmlWithMigrationFiles=
+      <files xmlns:dc="http://purl.org/dc/terms/" xmlns="http://easy.dans.knaw.nl/schemas/bag/metadata/files/">
+
+        <file filepath="data/leeg.txt">
+          <dc:format>text/xml</dc:format>
+        </file>
+        <file filepath="data/easy-migration/provenance.xml">
+          <dc:format>text/xml</dc:format>
+        </file>
+        <file filepath="data/easy-migration/emd.xml">
+          <dc:format>text/xml</dc:format>
+        </file>
+        <file filepath="data/easy-migration/dataset.xml">
+          <dc:format>text/xml</dc:format>
+        </file>
+        <file filepath="data/easy-migration/files.xml">
+          <dc:format>text/xml</dc:format>
+        </file>
+      </files>
+
+    (resourceBags_3.children.toArray).foreach { testBag =>
+      testBag.copyTo(
+        (testDir / "exports" / testBag.name).createDirectories()
+      )
+    }
+
+    new EasyConvertBagToDepositApp(appConfig).addPropsToBags(
+      (testDir / "exports").children,
+      maybeOutputDir = Some((testDir / "ingest-dir").createDirectories()),
+      DepositPropertiesFactory(appConfig, DOI, VAULT)
+    ) shouldBe Success("No fatal errors")
+
+    val movedBag = testDir / "ingest-dir" / validUUID / "bag-revision-1"
+    val filesXml = movedBag / "metadata" / "files.xml"
+    normalized(XML.loadFile(filesXml.toJava)) shouldBe(normalized(filesXmlWithMigrationFiles))
   }
 }
