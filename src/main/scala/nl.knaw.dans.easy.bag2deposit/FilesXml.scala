@@ -28,14 +28,17 @@ object FilesXml extends DebugEnhancedLogging {
   def apply(filesXml: Elem, destination: String, addedFiles: Seq[String], mimeType: String): Node = {
 
     val formatTagPrefix = Option(filesXml.scope.getPrefix(DEFAULT_URI)).getOrElse(DEFAULT_PREFIX)
+    val binding = NamespaceBinding(formatTagPrefix, DEFAULT_URI, filesXml.scope)
+    val format = <xx:format>{ mimeType }</xx:format>
+      .copy(prefix = formatTagPrefix)
     val filesXmlWithPossiblyAddedNamespace = Option(filesXml.scope.getURI(formatTagPrefix))
       .map(_ => filesXml)
-      .getOrElse(filesXml.copy(scope = NamespaceBinding(formatTagPrefix, DEFAULT_URI, filesXml.scope)))
-    val newFileElements = addedFiles.foldLeft(NodeSeq.Empty)((a, b) => a ++
-      XML.loadString(
-        s"""<file filepath="$destination/$b">
-           <$formatTagPrefix:format>$mimeType</$formatTagPrefix:format>
-        </file>"""))
+      .getOrElse(filesXml.copy(scope = binding))
+    val newFileElements = addedFiles.map(newFile =>
+      <file filepath={s"$destination/$newFile"} >
+        { format }
+      </file>
+    )
 
     object insertElements extends RewriteRule {
       override def transform(node: Node): Seq[Node] = node match {
